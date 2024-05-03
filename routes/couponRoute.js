@@ -23,6 +23,7 @@ router.use(
     optionsSuccessStatus: 200,
     preflightContinue: true,
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
