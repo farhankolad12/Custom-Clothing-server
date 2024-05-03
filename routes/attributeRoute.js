@@ -14,6 +14,7 @@ router.use(
   cors({
     origin: [process.env.CLIENT_HOST_NAME, process.env.CLIENT_ADMIN_HOST_NAME],
     optionsSuccessStatus: 200,
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     preflightContinue: true,
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
