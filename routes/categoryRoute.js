@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const Multer = require("multer");
 
-const { isAuthenticate } = require("../middlewares/auth");
+const { isAuthenticate, authorizeRoles } = require("../middlewares/auth");
 const {
   addCategory,
   getCategories,
@@ -20,15 +20,19 @@ router.use(
   cors({
     origin: [process.env.CLIENT_HOST_NAME, process.env.CLIENT_ADMIN_HOST_NAME],
     optionsSuccessStatus: 200,
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     preflightContinue: true,
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-router.route("/category").post(isAuthenticate, upload.any(), addCategory);
-router.route("/category").get(isAuthenticate, getCategories);
-router.route("/remove-category").post(isAuthenticate, deleteCategory);
+router
+  .route("/category")
+  .post(isAuthenticate, authorizeRoles("admin"), upload.any(), addCategory);
+router
+  .route("/category")
+  .get(isAuthenticate, authorizeRoles("admin"), getCategories);
+router
+  .route("/remove-category")
+  .post(isAuthenticate, authorizeRoles("admin"), deleteCategory);
 
 module.exports = router;

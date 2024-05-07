@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const Multer = require("multer");
 
-const { isAuthenticate } = require("../middlewares/auth");
+const { isAuthenticate, authorizeRoles } = require("../middlewares/auth");
 const {
   getProductFilters,
   addProduct,
@@ -23,20 +23,18 @@ router.use(
     origin: [process.env.CLIENT_HOST_NAME, process.env.CLIENT_ADMIN_HOST_NAME],
     optionsSuccessStatus: 200,
     preflightContinue: true,
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 router.route("/product-filters").get(getProductFilters);
 
-router.route("/product").post(isAuthenticate, upload.any(), addProduct);
+router.route("/product").post(isAuthenticate, authorizeRoles("admin"), upload.any(), addProduct);
 
 router.route("/product").get(getProduct);
 
-router.route("/remove-product").post(isAuthenticate, deleteProduct);
+router.route("/remove-product").post(isAuthenticate,authorizeRoles("admin"), deleteProduct);
 
-router.route("/products").get(isAuthenticate, getProducts);
+router.route("/products").get(isAuthenticate, authorizeRoles("admin"), getProducts);
 
 module.exports = router;

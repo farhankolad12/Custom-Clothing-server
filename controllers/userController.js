@@ -1,10 +1,14 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
-const ErrorHandler = require("../utils/errorhandler");
 
 const bcrypt = require("bcrypt");
 
+const Cart = require("../models/cartModel");
 const Users = require("../models/userModel");
+const Orders = require("../models/orderModel");
+const Products = require("../models/productModel");
+
 const sendToken = require("../utils/sendToken");
+const filterQuery = require("../utils/filterQuery");
 
 exports.register = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -39,7 +43,9 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
           }
         );
       } else {
-        return next(new ErrorHandler("Current password is invalid!"));
+        return res
+          .status(401)
+          .json({ success: false, message: "Current password is invalid!" });
       }
 
       return res.status(200).json({ success: true });
@@ -63,7 +69,9 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
   const emailExists = await Users.findOne({ email });
 
   if (emailExists) {
-    return next(new ErrorHandler("Email Already Exists", 401));
+    return res
+      .status(401)
+      .json({ success: false, message: "Email Already Exists" });
   }
 
   const hashPassword = await bcrypt.hash(pass, 10);
@@ -91,25 +99,111 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
       return sendToken({ user, cartItems: [] }, 200, res);
     }
 
-    return next(new ErrorHandler("Email/password is incorrect", 401));
+    return res
+      .status(401)
+      .json({ success: false, message: "Email/password is incorrect" });
   }
 
   const user = await Users.findOne({ email, role: "customer" });
 
   if (user && (await bcrypt.compare(password, user.password))) {
-    return sendToken({ user, cartItems: [] }, 200, res);
+    const userCart = await Cart.findOne({ uid: user._id });
+
+    // if (!userCart) {
+    //   return res.status(200).json({ products: [] });
+    // }
+
+    const resData = [];
+
+    for (let i = 0; i < userCart?.products.length; i++) {
+      const cartProduct = userCart.products[i];
+
+      const product = await Products.findOne({ _id: cartProduct.productId });
+
+      resData.push({
+        ...product._doc,
+        quantity: cartProduct.quantity,
+        selectedVariantIds: cartProduct.selectedVariationIds,
+        selectedCombination: cartProduct.selectedCombination,
+      });
+    }
+    return sendToken(
+      { user, cartItems: { ...userCart?._doc, products: resData || [] } },
+      200,
+      res
+    );
   }
 
-  return next(new ErrorHandler("Email/password is incorrect", 401));
+  return res
+    .status(401)
+    .json({ success: false, message: "Email/password is incorrect" });
 });
 
 exports.logout = catchAsyncErrors(async (req, res, next) => {
   return res
     .status(200)
-    .clearCookie(req.user.role === "customer" ? "token" : "adminToken")
+    .cookie(req.user.role === "customer" ? "token" : "adminToken", "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    })
     .json({ success: true });
 });
 
 exports.forgetPassword = catchAsyncErrors(async (req, res, next) => {
   const { email } = req.body;
+});
+
+exports.getCustomers = catchAsyncErrors(async (req, res, next) => {
+  const { searchParams } = req.query;
+
+  const params = new URLSearchParams(searchParams);
+  const sort = params.get("sort");
+
+  const {
+    data: customers,
+    totalPages,
+    currentPage,
+    totalDocuments,
+    startDocument,
+    lastDocument,
+  } = await filterQuery(
+    searchParams,
+    ["fname", "lname", "email", "phone", "gender"],
+    Users,
+    sort,
+    "or"
+  );
+
+  return res.status(200).json({
+    customers,
+    totalPages,
+    currentPage,
+    totalDocuments,
+    startDocument,
+    lastDocument,
+  });
+});
+
+exports.getAdminUserOrders = catchAsyncErrors(async (req, res, next) => {
+  const { searchParams, id } = req.query;
+
+  const params = new URLSearchParams(searchParams);
+
+  const currentPage = Number(params.get("page")) || 1;
+  const pageSize = 5;
+  const totalDocuments = await Orders.countDocuments({ uid: id });
+
+  const orders = await Orders.find({ uid: id })
+    .limit(pageSize)
+    .skip(pageSize * (currentPage - 1));
+
+  return res.status(200).json({
+    orders,
+    totalPages: Math.ceil(totalDocuments / pageSize),
+    currentPage,
+    totalDocuments,
+    startDocument: pageSize * (currentPage - 1) + 1,
+    lastDocument: pageSize * (currentPage - 1) + orders.length,
+  });
 });

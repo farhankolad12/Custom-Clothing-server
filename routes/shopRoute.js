@@ -11,8 +11,6 @@ router.use(
     origin: [process.env.CLIENT_HOST_NAME, process.env.CLIENT_ADMIN_HOST_NAME],
     optionsSuccessStatus: 200,
     preflightContinue: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
 
     credentials: true,
   })

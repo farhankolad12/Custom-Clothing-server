@@ -2,7 +2,7 @@ const sendToken = ({ user, cartItems }, statuscode, res) => {
   const token = user.getJWTToken();
 
   const options = {
-    expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+    expires: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
     secure: true,
     sameSite: "none",
     httpOnly: true,

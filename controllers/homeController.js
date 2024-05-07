@@ -141,7 +141,9 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
   const featuredProducts = await Products.find({ isFeatured: true }).limit(8);
   const newCollections = await Products.find({
     createdAt: { $gte: myEpoch, $lte: Date.now() },
-  }).limit(8);
+  })
+    .skip(1)
+    .limit(8);
 
   const categoriesC = await Categories.find();
 
@@ -168,14 +170,23 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
     });
   }
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  let user = undefined;
+  try {
+    const decodedData = jwt.verify(token, process.env.JWT_SECRET);
 
-  // console.log(decodedData);
+    // console.log(decodedData);
 
-  const user = await Users.findOne(
-    { _id: decodedData.id, role: "customer" },
-    { password: 0 }
-  );
+    user = await Users.findOne(
+      { _id: decodedData?.id, role: "customer" },
+      { password: 0 }
+    );
+  } catch {
+    res.cookie("token", "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+  }
 
   const fProducts = [];
   const cProducts = [];
@@ -192,13 +203,17 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
 
       const inWishlist1 = await Wishlists.countDocuments({
         uid: user._id,
-        products: { $elemMatch: { productId: collectionProduct._id } },
+        products: { $elemMatch: { productId: collectionProduct?._id } },
       });
 
       if (inWishlist1 > 0) {
-        cProducts.push({ ...collectionProduct._doc, inWishlist: true });
+        if (collectionProduct) {
+          cProducts.push({ ...collectionProduct?._doc, inWishlist: true });
+        }
       } else {
-        cProducts.push({ ...collectionProduct._doc, inWishlist: false });
+        if (collectionProduct) {
+          cProducts.push({ ...collectionProduct?._doc, inWishlist: false });
+        }
       }
 
       if (inWishlist > 0) {
@@ -347,7 +362,6 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
       success: false,
       message: "Please select quantity bigger than 0",
     });
-    return next(new ErrorHandler("Please select quantity bigger than 0", 401));
   }
 
   const currentUser = req.user;
@@ -503,24 +517,22 @@ exports.updateNewsletter = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
-  return res
-    .status(200)
-    .json(
-      await Products.find(
-        {},
-        {
-          category: 0,
-          combinations: 0,
-          createdAt: 0,
-          fullDescription: 0,
-          images: 0,
-          isFeatured: 0,
-          name: 0,
-          price: 0,
-          shortDescription: 0,
-          tags: 0,
-          variants: 0,
-        }
-      )
-    );
+  return res.status(200).json(
+    await Products.find(
+      {},
+      {
+        category: 0,
+        combinations: 0,
+        createdAt: 0,
+        fullDescription: 0,
+        images: 0,
+        isFeatured: 0,
+        name: 0,
+        price: 0,
+        shortDescription: 0,
+        tags: 0,
+        variants: 0,
+      }
+    )
+  );
 });

@@ -1,5 +1,3 @@
-const ErrorHandler = require("../utils/errorhandler");
-
 const jwt = require("jsonwebtoken");
 
 const Users = require("../models/userModel");
@@ -10,7 +8,7 @@ exports.isAuthenticate = async (req, res, next) => {
   const token = Boolean(isAdmin) ? req.cookies.adminToken : req.cookies.token;
 
   if (!token) {
-    return next(new ErrorHandler("Please Login", 401, res));
+    return res.status(401).json({ success: false, message: "Please Login" });
   }
 
   try {
@@ -26,25 +24,32 @@ exports.isAuthenticate = async (req, res, next) => {
       return next();
     }
 
-    return next(new ErrorHandler("Please Login", 401, res));
+    return res.status(401).json({ success: false, message: "Please Login" });
   } catch (err) {
     console.log(err);
-    res.clearCookie(Boolean(isAdmin) ? "adminToken" : "token");
-
-    return next(new ErrorHandler("Please Login", 401, res));
+    res
+      .cookie(Boolean(isAdmin) ? "adminToken" : "token", "", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      })
+      .status(401)
+      .json({ success: false, message: "Please login again!" });
   }
 };
 
 exports.authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return next(
-        ErrorHandler(
-          `Role: ${req.user.role} is not allowed to access this resouce `,
-          403,
-          res
-        )
-      );
+      res.cookie("adminToken", "", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
+      return res.status(403).json({
+        success: false,
+        message: `Role: ${req.user.role} is not allowed to access this resouce `,
+      });
     }
 
     next();

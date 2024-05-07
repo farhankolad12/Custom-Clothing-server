@@ -26,11 +26,9 @@ const upload = Multer({
 router.use(
   cors({
     origin: [process.env.CLIENT_HOST_NAME, process.env.CLIENT_ADMIN_HOST_NAME],
-    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
     optionsSuccessStatus: 200,
     preflightContinue: true,
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 

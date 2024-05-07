@@ -7,6 +7,9 @@ const termsPrivacyContentSchema = new mongoose.Schema({
   privacyPolicy: {
     type: String,
   },
+  refundPolicy: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model(

@@ -105,12 +105,22 @@ exports.filterProducts = catchAsyncErrors(async (req, res, next) => {
     });
   }
 
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+  let user = undefined;
 
-  const user = await Users.findOne(
+  try {
+    const decodedData = jwt.verify(token, process.env.JWT_SECRET);
+
+ user = await Users.findOne(
     { _id: decodedData.id, role: "customer" },
     { password: 0 }
   );
+  } catch {
+    res.cookie("token", "", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    })
+  }
 
   const fProducts = [];
 

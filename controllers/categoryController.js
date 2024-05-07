@@ -29,7 +29,7 @@ exports.getCategories = catchAsyncErrors(async (req, res, next) => {
 
 exports.addCategory = catchAsyncErrors(async (req, res, next) => {
   const { description, name, _id } = req.body;
-  const file = req.files[0];
+  const file = req.files?.[0];
 
   if (_id) {
     if (file) {
@@ -49,22 +49,22 @@ exports.addCategory = catchAsyncErrors(async (req, res, next) => {
       success: true,
       category: await Categories.findOne({ _id: _id }),
     });
+  } else {
+    const b64 = Buffer.from(file.buffer).toString("base64");
+    const dataURI = "data:" + file.mimetype + ";base64," + b64;
+    const cldRes = await handleUpload(dataURI);
+    const icon = { id: cldRes.public_id, link: cldRes.url };
+
+    const category = new Categories({
+      name,
+      description,
+      icon,
+    });
+
+    await category.save();
+
+    return res.status(200).json({ success: true, category });
   }
-
-  const b64 = Buffer.from(file.buffer).toString("base64");
-  const dataURI = "data:" + file.mimetype + ";base64," + b64;
-  const cldRes = await handleUpload(dataURI);
-  const icon = { id: cldRes.public_id, link: cldRes.url };
-
-  const category = new Categories({
-    name,
-    description,
-    icon,
-  });
-
-  await category.save();
-
-  return res.status(200).json({ success: true, category });
 });
 
 exports.deleteCategory = catchAsyncErrors(async (req, res, next) => {
