@@ -1,6 +1,7 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
 const Orders = require("../models/orderModel");
+const Reviews = require("../models/reviewModel");
 
 exports.getOrders = catchAsyncErrors(async (req, res, next) => {
   const { searchParams } = req.query;
@@ -197,7 +198,11 @@ exports.getUserOrder = catchAsyncErrors(async (req, res, next) => {
   const currentUser = req.user;
   const { id } = req.query;
 
+  const isReview = await Reviews.findOne({ orderId: id });
+
   const order = await Orders.findOne({ uid: currentUser._id, _id: id });
 
-  return res.status(200).json(order);
+  return res
+    .status(200)
+    .json({ ...order?._doc, isReview: isReview ? true : false });
 });

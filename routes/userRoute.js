@@ -7,6 +7,8 @@ const {
   logout,
   getCustomers,
   getAdminUserOrders,
+  forgetPassword,
+  resetPassword,
 } = require("../controllers/userController");
 const { isAuthenticate, authorizeRoles } = require("../middlewares/auth");
 
@@ -33,5 +35,9 @@ router
 router
   .route("/check-auth")
   .get(isAuthenticate, (req, res) => res.status(200).json({ user: req.user }));
+
+router.route("/reset-password").post(forgetPassword);
+
+router.route("/forget-password").post(resetPassword);
 
 module.exports = router;

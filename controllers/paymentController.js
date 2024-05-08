@@ -8,7 +8,7 @@ const Coupons = require("../models/couponModel");
 const Orders = require("../models/orderModel");
 const Cart = require("../models/cartModel");
 
-exports.createOrder = catchAsyncErrors(async (req, res, next) => {
+exports.createOrder = catchAsyncErrors(async (req, res) => {
   const currentUser = req.user;
 
   const cartItem = await Cart.findOne({ uid: currentUser._id });
@@ -40,7 +40,7 @@ exports.createOrder = catchAsyncErrors(async (req, res, next) => {
     receipt: cartItem._id,
   });
 
-  //   console.log(order);
+  // console.log(order);
 
   if (!order) {
     return res

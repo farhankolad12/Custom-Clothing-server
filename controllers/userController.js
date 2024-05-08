@@ -1,14 +1,17 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const Cart = require("../models/cartModel");
 const Users = require("../models/userModel");
 const Orders = require("../models/orderModel");
 const Products = require("../models/productModel");
+const ResetTokens = require("../models/resetTokenModel");
 
 const sendToken = require("../utils/sendToken");
 const filterQuery = require("../utils/filterQuery");
+const { sendResetMail } = require("../utils/sendEmail");
 
 exports.register = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -152,6 +155,37 @@ exports.logout = catchAsyncErrors(async (req, res, next) => {
 
 exports.forgetPassword = catchAsyncErrors(async (req, res, next) => {
   const { email } = req.body;
+
+  const user = await Users.findOne(
+    { email, role: "customer" },
+    { email: 1, fname: 1, _id: 1 }
+  );
+
+  if (user) {
+    const alreadyReqReset = await ResetTokens.findOne({ userId: user._id });
+
+    if (alreadyReqReset) {
+      await sendResetMail({
+        to: email,
+        name: user.fname,
+        token: alreadyReqReset.token,
+      });
+    } else {
+      const token = jwt.sign(user._doc, process.env.JWT_SECRET, {
+        expiresIn: "1d",
+      });
+
+      await sendResetMail({ to: email, name: user.fname, token });
+
+      const resetToken = new ResetTokens({
+        token,
+      });
+
+      await resetToken.save();
+    }
+  }
+
+  return res.status(200).json({ success: true });
 });
 
 exports.getCustomers = catchAsyncErrors(async (req, res, next) => {
@@ -206,4 +240,38 @@ exports.getAdminUserOrders = catchAsyncErrors(async (req, res, next) => {
     startDocument: pageSize * (currentPage - 1) + 1,
     lastDocument: pageSize * (currentPage - 1) + orders.length,
   });
+});
+
+exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
+  const { token, password } = req.body;
+
+  const isExistsToken = await ResetTokens.findOne({
+    token,
+    expiredAt: { $lt: Date.now() },
+  });
+
+  if (isExistsToken) {
+    const data = jwt.verify(token, process.env.JWT_SECRET);
+
+    const userId = data._id;
+
+    const user = await Users.findOne({ _id: userId });
+
+    if (user) {
+      const newPassEnc = await bcrypt.hash(password, 10);
+
+      await Users.updateOne(
+        { _id: userId },
+        { $set: { password: newPassEnc } }
+      );
+
+      await ResetTokens.deleteOne({ token });
+
+      return res.status(200).json({ success: true });
+    } else {
+      return res.status(401).json({ success: false, message: "Invalid Token" });
+    }
+  }
+
+  return res.status(401).json({ success: false, message: "Invalid Token" });
 });
