@@ -46,6 +46,4 @@ app.use("/api", attribute);
 app.use("/api", privacyTerms);
 app.use("/api/payment", payment);
 
-console.log(process.env.PORT || 4000);
-
 app.listen(process.env.PORT || 4000);
