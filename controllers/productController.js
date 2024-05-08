@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
 const Users = require("../models/userModel");
+const Reviews = require("../models/reviewModel");
 const Products = require("../models/productModel");
 const Wishlists = require("../models/wishlistModel");
 const Attributes = require("../models/attributeModel");
@@ -166,11 +167,16 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
       products: { $elemMatch: { productId: id } },
     });
 
+    const productReviews = await Reviews.find({ productId: product?._id });
+
     return res.status(200).json({
       ...product?._doc,
+      reviews: productReviews,
       inWishlist: product ? (inWishlist ? true : false) : undefined,
     });
   }
 
-  return res.status(200).json({ ...product?._doc });
+  const productReviews = await Reviews.find({ productId: product?._id });
+
+  return res.status(200).json({ ...product?._doc, reviews: productReviews });
 });
