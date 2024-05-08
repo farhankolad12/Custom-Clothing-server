@@ -6,7 +6,7 @@ const Reviews = require("../models/reviewModel");
 exports.createUserReviews = catchAsyncErrors(async (req, res, next) => {
   const { reviews } = req.body;
 
-  const isReview = await Orders.findOne({ _id: reviews[0].orderId });
+  const isReview = await Reviews.findOne({ orderId: reviews[0].orderId });
 
   if (isReview) {
     return res.status(200).json({ success: true });
