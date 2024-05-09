@@ -521,7 +521,6 @@ exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
   let skip = 0;
   let products = [];
 
-  console.log(products);
   while (true) {
     const batchProducts = await Products.find({}, { _id: 1 })
       .skip(skip)
@@ -535,6 +534,5 @@ exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
     skip += batchSize;
   }
 
-  console.log(products);
   return res.status(200).json(products);
 });
