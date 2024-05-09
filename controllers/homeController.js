@@ -519,7 +519,7 @@ exports.updateNewsletter = catchAsyncErrors(async (req, res, next) => {
 exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
   return res.status(200).json(
     await Products.find(
-      {},
+      { _id: { $ne: "" } },
       {
         _id: 1,
       }
