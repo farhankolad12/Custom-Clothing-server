@@ -19,6 +19,10 @@ exports.getProductFilters = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
+exports.getAllProducts = catchAsyncErrors(async (req, res, next) => {
+  return res.status(200).json(await Products.find({}, { _id: 1 }));
+});
+
 exports.getProducts = catchAsyncErrors(async (req, res, next) => {
   const { searchParams } = req.query;
 
@@ -141,8 +145,47 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
   const product = await Products.findOne({ _id: id });
   const token = req.cookies.token;
 
+  const productReviews = await Reviews.find({ productId: product?._id });
+  const sumOfMaxRatingOfUserCount = productReviews.length * 5;
+  const sumOfRating = productReviews.reduce((prev, review) => {
+    return prev + review.rating;
+  }, 0);
+
+  const totalRating = Math.ceil((sumOfRating * 5) / sumOfMaxRatingOfUserCount);
+
+  const relatedProducts = await Products.find({
+    $and: [
+      {
+        _id: { $ne: product?._id },
+      },
+      {
+        $or: [
+          {
+            category: product?.category,
+          },
+          {
+            name: {
+              $regex: product?.name,
+              $options: "i",
+            },
+          },
+          {
+            "tags.tag": {
+              $in: product?.tags.map((tag) => tag.tag),
+            },
+          },
+        ],
+      },
+    ],
+  });
+
   if (!token) {
-    return res.status(200).json({ ...product?._doc });
+    return res.status(200).json({
+      ...product?._doc,
+      reviews: productReviews,
+      totalRating,
+      relatedProducts,
+    });
   }
 
   let user = undefined;
@@ -167,16 +210,35 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
       products: { $elemMatch: { productId: id } },
     });
 
-    const productReviews = await Reviews.find({ productId: product?._id });
+    const newRelatedProducts = [];
+
+    for (let i = 0; i < relatedProducts.length; i++) {
+      const relatedProduct = relatedProducts[i];
+
+      const inWishlist = await Wishlists.findOne({
+        uid: user._id,
+        products: { $elemMatch: { productId: relatedProduct._id } },
+      });
+
+      newRelatedProducts.push({
+        ...relatedProduct._doc,
+        inWishlist: inWishlist ? true : false,
+      });
+    }
 
     return res.status(200).json({
       ...product?._doc,
       reviews: productReviews,
       inWishlist: product ? (inWishlist ? true : false) : undefined,
+      totalRating,
+      relatedProducts: newRelatedProducts,
     });
   }
 
-  const productReviews = await Reviews.find({ productId: product?._id });
-
-  return res.status(200).json({ ...product?._doc, reviews: productReviews });
+  return res.status(200).json({
+    ...product?._doc,
+    reviews: productReviews,
+    totalRating,
+    relatedProducts,
+  });
 });

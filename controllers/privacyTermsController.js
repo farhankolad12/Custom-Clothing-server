@@ -7,20 +7,22 @@ exports.getPrivacyTerms = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.updatePrivacyTerms = catchAsyncErrors(async (req, res, next) => {
-  const { privacyPolicy, termsConditions, refundPolicy } = req.body;
+  const { privacyPolicy, termsConditions, refundPolicy, shippingPolicy } =
+    req.body;
 
   const isAvailable = await TermsPrivacy.findOne();
 
   if (isAvailable) {
     await TermsPrivacy.updateOne(
       { _id: isAvailable._id },
-      { $set: { privacyPolicy, termsConditions, refundPolicy } }
+      { $set: { privacyPolicy, termsConditions, refundPolicy, shippingPolicy } }
     );
   } else {
     const newPrivacyTerms = new TermsPrivacy({
       privacyPolicy,
       termsConditions,
       refundPolicy,
+      shippingPolicy,
     });
 
     await newPrivacyTerms.save();

@@ -10,6 +10,9 @@ const termsPrivacyContentSchema = new mongoose.Schema({
   refundPolicy: {
     type: String,
   },
+  shippingPolicy: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model(
