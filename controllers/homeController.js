@@ -521,11 +521,11 @@ exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
   let skip = 0;
   let products = [];
 
+  console.log(products);
   while (true) {
-    const batch = await Products.find({}, { _id: 1 })
+    const batchProducts = await Products.find({}, { _id: 1 })
       .skip(skip)
       .limit(batchSize);
-    const batchProducts = await batch.toArray();
 
     if (batchProducts.length === 0) {
       break;
@@ -534,5 +534,7 @@ exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
     products = products.concat(batchProducts);
     skip += batchSize;
   }
+
+  console.log(products);
   return res.status(200).json(products);
 });
