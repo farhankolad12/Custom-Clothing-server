@@ -179,7 +179,7 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
         ],
       },
     ],
-  });
+  }).limit(4);
 
   if (!token) {
     return res.status(200).json({
