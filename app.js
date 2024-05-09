@@ -10,7 +10,7 @@ const cookieParser = require("cookie-parser");
 const connectDatabase = require("./config/database");
 const connectCloudinary = require("./config/cloudinaryUpload");
 
-connectDatabase();
+await connectDatabase();
 connectCloudinary();
 
 app.use(express.json());
