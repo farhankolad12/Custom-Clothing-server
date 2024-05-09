@@ -20,7 +20,9 @@ exports.getProductFilters = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getAllProducts = catchAsyncErrors(async (req, res, next) => {
-  return res.status(200).json(await Products.find({}, { _id: 1 }));
+  const allProducts = await Products.find({}, { _id: 1 });
+
+  return res.status(200).json(allProducts);
 });
 
 exports.getProducts = catchAsyncErrors(async (req, res, next) => {
