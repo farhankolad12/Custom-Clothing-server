@@ -517,13 +517,22 @@ exports.updateNewsletter = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
-  return res.status(200).json(
-    await Products.aggregate([
-      {
-        $group: {
-          _id: "$_id",
-        },
-      },
-    ])
-  );
+  const batchSize = 10;
+  let skip = 0;
+  let products = [];
+
+  while (true) {
+    const batch = await Products.find({}, { _id: 1 })
+      .skip(skip)
+      .limit(batchSize);
+    const batchProducts = await batch.toArray();
+
+    if (batchProducts.length === 0) {
+      break;
+    }
+
+    products = products.concat(batchProducts);
+    skip += batchSize;
+  }
+  return res.status(200).json(products);
 });
