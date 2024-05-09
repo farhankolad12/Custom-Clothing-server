@@ -4,13 +4,13 @@ dotenv.config();
 const express = require("express");
 const app = express();
 
-const bodyParser = require("body-parser");
+// const bodyParser = require("body-parser");
 
 const cookieParser = require("cookie-parser");
 const connectDatabase = require("./config/database");
 const connectCloudinary = require("./config/cloudinaryUpload");
 
-connectDatabase();
+(async () => await connectDatabase())();
 connectCloudinary();
 
 app.use(express.json());

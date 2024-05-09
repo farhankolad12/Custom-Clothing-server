@@ -521,17 +521,7 @@ exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
     await Products.find(
       {},
       {
-        category: 0,
-        combinations: 0,
-        createdAt: 0,
-        fullDescription: 0,
-        images: 0,
-        isFeatured: 0,
-        name: 0,
-        price: 0,
-        shortDescription: 0,
-        tags: 0,
-        variants: 0,
+        _id: 1,
       }
     )
   );
