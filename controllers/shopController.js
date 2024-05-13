@@ -62,7 +62,7 @@ exports.filterProducts = catchAsyncErrors(async (req, res, next) => {
         },
       },
       {
-        price: { $gte: minPrice, $lte: maxPrice },
+        "combinations.salePrice": { $gte: minPrice, $lte: maxPrice },
       },
       {
         $or: params.get("query")
@@ -110,16 +110,16 @@ exports.filterProducts = catchAsyncErrors(async (req, res, next) => {
   try {
     const decodedData = jwt.verify(token, process.env.JWT_SECRET);
 
- user = await Users.findOne(
-    { _id: decodedData.id, role: "customer" },
-    { password: 0 }
-  );
+    user = await Users.findOne(
+      { _id: decodedData.id, role: "customer" },
+      { password: 0 }
+    );
   } catch {
     res.cookie("token", "", {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-    })
+    });
   }
 
   const fProducts = [];
