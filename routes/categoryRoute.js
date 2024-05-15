@@ -31,7 +31,7 @@ router.route("/category-name").get(async (req, res, next) => {
   const { name } = req.query;
   return res.status(200).json(
     await Categories.findOne({
-      name: { $regex: name.replace("%20", " "), $options: "i" },
+      name: { $regex: name.replaceAll("%20", " "), $options: "i" },
     })
   );
 });

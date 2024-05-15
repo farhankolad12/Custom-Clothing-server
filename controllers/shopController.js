@@ -29,7 +29,7 @@ exports.getCategoryProducts = catchAsyncErrors(async (req, res, next) => {
   if (
     !(await Categories.findOne({
       name: {
-        $regex: categoryName.replace("%20", " "),
+        $regex: categoryName.replaceAll("%20", " "),
         $options: "i",
       },
     }))
@@ -52,7 +52,7 @@ exports.getCategoryProducts = catchAsyncErrors(async (req, res, next) => {
     $and: [
       {
         category: {
-          $regex: categoryName.replace("%20", " "),
+          $regex: categoryName.replaceAll("%20", " "),
           $options: "i",
         },
       },
