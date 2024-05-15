@@ -34,14 +34,23 @@ const homePageContentSchema = new mongoose.Schema({
       link: { type: String },
     },
     description: { type: String },
-    buttonName: { type: String },
-    buttonLink: { type: String },
+    categoryName: { type: String },
   },
   secondBanner: {
     title: { type: String },
     description: { type: String },
-    buttonName: { type: String },
-    buttonLink: { type: String },
+    categoryName: { type: String },
+
+    img: {
+      id: { type: String },
+      link: { type: String },
+    },
+  },
+  thirdBanner: {
+    title: { type: String },
+    description: { type: String },
+    categoryName: { type: String },
+
     img: {
       id: { type: String },
       link: { type: String },

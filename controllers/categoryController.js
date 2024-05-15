@@ -28,21 +28,34 @@ exports.getCategories = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.addCategory = catchAsyncErrors(async (req, res, next) => {
-  const { description, name, _id } = req.body;
-  const file = req.files?.[0];
+  const { description, name, _id, tags: uTags } = req.body;
+  const files = req.files;
+
+  const tags = JSON.parse(uTags);
 
   if (_id) {
-    if (file) {
-      const b64 = Buffer.from(file.buffer).toString("base64");
-      let dataURI = "data:" + file.mimetype + ";base64," + b64;
-      const cldRes = await handleUpload(dataURI);
-      const icon = { id: cldRes.public_id, link: cldRes.url };
+    if (files.length) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const b64 = Buffer.from(file.buffer).toString("base64");
+        let dataURI = "data:" + file.mimetype + ";base64," + b64;
+        const cldRes = await handleUpload(dataURI);
+        const icon = { id: cldRes.public_id, link: cldRes.url };
+        await Categories.updateOne(
+          { _id: _id },
+          {
+            $set:
+              file.fieldname === "catImg"
+                ? { name, description, icon, tags }
+                : { name, description, bannerImg: icon, tags },
+          }
+        );
+      }
+    } else {
       await Categories.updateOne(
         { _id: _id },
-        { $set: { name, description, icon } }
+        { $set: { name, description, tags } }
       );
-    } else {
-      await Categories.updateOne({ _id: _id }, { $set: { name, description } });
     }
 
     return res.status(200).json({
@@ -50,15 +63,26 @@ exports.addCategory = catchAsyncErrors(async (req, res, next) => {
       category: await Categories.findOne({ _id: _id }),
     });
   } else {
-    const b64 = Buffer.from(file.buffer).toString("base64");
-    const dataURI = "data:" + file.mimetype + ";base64," + b64;
-    const cldRes = await handleUpload(dataURI);
-    const icon = { id: cldRes.public_id, link: cldRes.url };
+    let icon = undefined;
+    let bannerImg = undefined;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const b64 = Buffer.from(file.buffer).toString("base64");
+      const dataURI = "data:" + file.mimetype + ";base64," + b64;
+      const cldRes = await handleUpload(dataURI);
+      if (file.fieldname === "catImg" && icon === undefined) {
+        icon = { id: cldRes.public_id, link: cldRes.url };
+      } else if (file.fieldname === "catBannerImg" && bannerImg === undefined) {
+        bannerImg = { id: cldRes.public_id, link: cldRes.url };
+      }
+    }
 
     const category = new Categories({
       name,
       description,
       icon,
+      bannerImg,
+      tags,
     });
 
     await category.save();

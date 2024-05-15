@@ -2,7 +2,11 @@ const express = require("express");
 const cors = require("cors");
 
 const { isAuthenticate } = require("../middlewares/auth");
-const { shopPage, filterProducts } = require("../controllers/shopController");
+const {
+  shopPage,
+  filterProducts,
+  getCategoryProducts,
+} = require("../controllers/shopController");
 
 const router = express.Router();
 
@@ -19,5 +23,7 @@ router.use(
 router.route("/shop-page").get(shopPage);
 
 router.route("/filter-products").get(filterProducts);
+
+router.route("/category-products").get(getCategoryProducts);
 
 module.exports = router;

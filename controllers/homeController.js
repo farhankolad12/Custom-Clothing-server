@@ -97,8 +97,9 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
           $set: {
             firstBanner: {
               ...JSON.parse(data),
-              img: img1.filter((img) => img.sliderId === "firstBannerImg")[0]
-                .icon,
+              img:
+                img1.filter((img) => img.sliderId === "firstBannerImg")[0]
+                  ?.icon || homePageContent[0].firstBanner.img,
             },
           },
         }
@@ -112,8 +113,24 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
           $set: {
             secondBanner: {
               ...JSON.parse(data),
-              img: img1.filter((img) => img.sliderId === "secondBannerImg")[0]
-                .icon,
+              img:
+                img1.filter((img) => img.sliderId === "secondBannerImg")[0]
+                  ?.icon || homePageContent[0].secondBanner.img,
+            },
+          },
+        }
+      );
+      break;
+    case "thirdBanner":
+      await HomePageContent.updateOne(
+        { _id: homePageContent[0]._id },
+        {
+          $set: {
+            thirdBanner: {
+              ...JSON.parse(data),
+              img:
+                img1.filter((img) => img.sliderId === "thirdBannerImg")[0]
+                  ?.icon || homePageContent[0].thirdBanner.img,
             },
           },
         }

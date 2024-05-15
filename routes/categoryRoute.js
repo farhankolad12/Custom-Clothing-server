@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const Multer = require("multer");
 
+const Categories = require("../models/categoryModel");
+
 const { isAuthenticate, authorizeRoles } = require("../middlewares/auth");
 const {
   addCategory,
@@ -25,6 +27,14 @@ router.use(
   })
 );
 
+router.route("/category-name").get(async (req, res, next) => {
+  const { name } = req.query;
+  return res.status(200).json(
+    await Categories.findOne({
+      name: { $regex: name.replace("%20", " "), $options: "i" },
+    })
+  );
+});
 router
   .route("/category")
   .post(isAuthenticate, authorizeRoles("admin"), upload.any(), addCategory);

@@ -15,6 +15,20 @@ const categorySchema = new mongoose.Schema({
       type: String,
     },
   },
+  bannerImg: {
+    id: {
+      type: String,
+    },
+    link: {
+      type: String,
+    },
+  },
+  tags: [
+    {
+      id: { type: String },
+      tag: { type: String },
+    },
+  ],
   createdAt: {
     type: Number,
     default: Date.now(),
