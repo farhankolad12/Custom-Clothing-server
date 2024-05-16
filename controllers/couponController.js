@@ -129,6 +129,16 @@ exports.checkCode = catchAsyncErrors(async (req, res, next) => {
     return res.status(200).json({ coupon: isExists, success: true });
   }
 
+  await Cart.updateOne(
+    { uid: currentUser._id },
+    {
+      $set: {
+        coupon: {},
+        discountedPrice: 0,
+      },
+    }
+  );
+
   return res
     .status(200)
     .json({ success: false, message: "Invalid coupon code" });
