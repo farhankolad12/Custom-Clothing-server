@@ -19,16 +19,6 @@ exports.getProductFilters = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-exports.getCategoryProducts = catchAsyncErrors(async (req, res, next) => {
-  const { name } = req.query;
-
-  const products = await Products.find({
-    category: { $regex: name, $options: "i" },
-  });
-
-  return res.status(200).json({ products });
-});
-
 exports.getAllProducts = catchAsyncErrors(async (req, res, next) => {
   const allProducts = await Products.find({}, { _id: 1 });
 
