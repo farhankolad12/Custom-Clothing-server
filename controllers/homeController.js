@@ -491,21 +491,33 @@ exports.deleteCart = catchAsyncErrors(async (req, res, next) => {
 
   const cartItems = await Cart.findOne({ uid: currentUser._id });
 
+  const subTotalPrice = cartItems?.products.some(
+    (productC) =>
+      productC.productId === productId &&
+      productC.selectedCombination.id === selectedCombination.id
+  )
+    ? (cartItems?.subTotalPrice || 0) -
+      selectedCombination.salePrice * quantity /*  -
+              product.selectedCombination.salePrice */
+    : (cartItems?.subTotalPrice || 0) +
+      selectedCombination.salePrice * quantity;
+
   await Cart.updateOne(
     { uid: currentUser._id },
     {
       $pull: { products: { "selectedCombination.id": selectedCombination.id } },
       $set: {
-        subTotalPrice: cartItems?.products.some(
-          (productC) =>
-            productC.productId === productId &&
-            productC.selectedCombination.id === selectedCombination.id
-        )
-          ? (cartItems?.subTotalPrice || 0) -
-            selectedCombination.salePrice * quantity /*  -
-              product.selectedCombination.salePrice */
-          : (cartItems?.subTotalPrice || 0) +
-            selectedCombination.salePrice * quantity,
+        subTotalPrice,
+        coupon: cartItems?.coupon.code
+          ? cartItems?.coupon.minimumCartValue > subTotalPrice
+            ? {}
+            : cartItems?.coupon
+          : cartItems?.coupon,
+        discountedPrice: cartItems.coupon.code
+          ? cartItems.coupon.minimumCartValue > subTotalPrice
+            ? 0
+            : cartItems.discountedPrice
+          : cartItems.discountedPrice,
       },
     }
   );
