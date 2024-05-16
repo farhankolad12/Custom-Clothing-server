@@ -35,6 +35,9 @@ router.route("/category-name").get(async (req, res, next) => {
     })
   );
 });
+router.route("/categories-sitemap").get(async (req, res, next) => {
+  return res.status(200).json(await Categories.find());
+});
 router
   .route("/category")
   .post(isAuthenticate, authorizeRoles("admin"), upload.any(), addCategory);
