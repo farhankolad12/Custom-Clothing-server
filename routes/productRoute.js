@@ -31,7 +31,7 @@ router.use(
 
 router.route("/product-filters").get(getProductFilters);
 
-router.route("/category-products").get(getCategoryProducts);
+// router.route("/category-products").get(getCategoryProducts);
 
 router
   .route("/product")

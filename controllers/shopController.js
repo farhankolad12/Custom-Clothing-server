@@ -20,7 +20,7 @@ exports.getCategoryProducts = catchAsyncErrors(async (req, res, next) => {
 
   const params = new URLSearchParams(searchParams);
   const currentPage = Number(params.get("page")) || 1;
-  const pageSize = 9;
+  const pageSize = 12;
 
   const variants = params.get("variants")?.split(",") || [];
   const minPrice = params.get("min") || 0;
