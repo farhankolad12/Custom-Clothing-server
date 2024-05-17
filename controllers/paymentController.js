@@ -3,6 +3,7 @@ const crypto = require("crypto");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
+const Notifications = require("../models/notificationModel");
 const Products = require("../models/productModel");
 const Coupons = require("../models/couponModel");
 const Orders = require("../models/orderModel");
@@ -120,13 +121,34 @@ exports.authorizePayment = catchAsyncErrors(async (req, res, next) => {
       : 0,
     products,
     shippingPrice: cartItem.shippingPrice,
-    subtotal: cartItem.subTotalPrice,
+    subtotal:
+      cartItem.subTotalPrice -
+      (isCoupon
+        ? cartItem.coupon.type === "fixed"
+          ? cartItem.coupon.discount
+          : (cartItem.coupon.discount / 100) * cartItem.subTotalPrice
+        : 0),
     method: paymentInstance.method,
   });
 
   await newOrder.save();
 
   await Cart.deleteOne({ uid: currentUser._id });
+
+  const newNotification = new Notifications({
+    orderTotal:
+      cartItem.subTotalPrice -
+      (isCoupon
+        ? cartItem.coupon.type === "fixed"
+          ? cartItem.coupon.discount
+          : (cartItem.coupon.discount / 100) * cartItem.subTotalPrice
+        : 0),
+    type: "order",
+    username: `${currentUser.fname} ${currentUser.lname}`,
+    orderId: newOrder._id,
+  });
+
+  await newNotification.save();
 
   return res.status(200).json({ success: true });
 });

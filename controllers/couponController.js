@@ -110,7 +110,7 @@ exports.checkCode = catchAsyncErrors(async (req, res, next) => {
   const isExists = await Coupons.findOne({
     code,
     expiresAt: { $gt: Date.now() },
-    minimumCartValue: { $lte: cartItem.subTotalPrice },
+    minimumCartValue: { $lte: cartItem?.subTotalPrice },
   });
 
   if (isExists) {

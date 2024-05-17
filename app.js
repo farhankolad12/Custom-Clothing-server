@@ -33,6 +33,7 @@ const payment = require("./routes/paymentRoute");
 const category = require("./routes/categoryRoute");
 const attribute = require("./routes/attributeRoute");
 const privacyTerms = require("./routes/privacyTerms");
+const notifications = require("./routes/notificationRoute");
 
 // Call Routers
 app.use("/api", user);
@@ -48,6 +49,7 @@ app.use("/api", queries);
 app.use("/api", category);
 app.use("/api", attribute);
 app.use("/api", privacyTerms);
+app.use("/api", notifications);
 app.use("/api/payment", payment);
 
 app.listen(process.env.PORT || 4000);
