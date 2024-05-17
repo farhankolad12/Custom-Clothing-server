@@ -154,12 +154,14 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
   const myDate = new Date(date);
   const myEpoch = myDate.getTime();
 
-  const featuredProducts = await Products.find({ isFeatured: true })
+  const newCollections = await Products.find({
+    createdAt: { $gte: myEpoch, $lte: Date.now() },
+  })
     .sort({ createdAt: -1 })
     .limit(8);
-  const newCollections = await Products.find({
-    _id: { $nin: featuredProducts.map((p1) => p1._id) },
-    createdAt: { $gte: myEpoch, $lte: Date.now() },
+  const featuredProducts = await Products.find({
+    _id: { $nin: newCollections.map((p1) => p1._id) },
+    isFeatured: true,
   })
     .sort({ createdAt: -1 })
     .limit(8);
