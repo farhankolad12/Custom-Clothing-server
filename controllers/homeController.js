@@ -158,6 +158,7 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
     .sort({ createdAt: -1 })
     .limit(8);
   const newCollections = await Products.find({
+    _id: { $nin: featuredProducts.map((p1) => p1._id) },
     createdAt: { $gte: myEpoch, $lte: Date.now() },
   })
     .sort({ createdAt: -1 })
