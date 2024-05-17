@@ -158,7 +158,6 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
   const newCollections = await Products.find({
     createdAt: { $gte: myEpoch, $lte: Date.now() },
   })
-    .skip(1)
     .sort({ createdAt: -1 })
     .limit(8);
 
