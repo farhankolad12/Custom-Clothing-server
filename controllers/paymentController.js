@@ -7,6 +7,7 @@ const Notifications = require("../models/notificationModel");
 const Products = require("../models/productModel");
 const Coupons = require("../models/couponModel");
 const Orders = require("../models/orderModel");
+const Users = require("../models/userModel");
 const Cart = require("../models/cartModel");
 
 exports.createOrder = catchAsyncErrors(async (req, res) => {
@@ -88,6 +89,39 @@ exports.authorizePayment = catchAsyncErrors(async (req, res, next) => {
       expiresAt: { $gt: Date.now() },
       minimumCartValue: { $lte: cartItem.subTotalPrice },
     });
+    if (isCoupon) {
+      if (isCoupon.isOneTime) {
+        if (
+          !currentUser.usedCoupons?.some((usedCoupon) =>
+            isCoupon._id.equals(usedCoupon)
+          )
+        ) {
+          const discountedPrice =
+            isCoupon.type === "fixed"
+              ? isCoupon.discount
+              : (isCoupon.discount / 100) * cartItem.subTotalPrice;
+
+          if (isCoupon.type === "percentage") {
+            if (isCoupon.maximumDiscount < discountedPrice) {
+              isCoupon = false;
+            }
+          }
+        } else {
+          isCoupon = false;
+        }
+      } else {
+        const discountedPrice =
+          isCoupon.type === "fixed"
+            ? isCoupon.discount
+            : (isCoupon.discount / 100) * cartItem.subTotalPrice;
+
+        if (isCoupon.type === "percentage") {
+          if (isCoupon.maximumDiscount < discountedPrice) {
+            isCoupon = false;
+          }
+        }
+      }
+    }
   }
 
   for (let i = 0; i < cartItem.products.length; i++) {
@@ -149,6 +183,13 @@ exports.authorizePayment = catchAsyncErrors(async (req, res, next) => {
   });
 
   await newNotification.save();
+
+  if (isCoupon) {
+    await Users.updateOne(
+      { _id: currentUser._id },
+      { $push: { usedCoupons: isCoupon._id } }
+    );
+  }
 
   return res.status(200).json({ success: true });
 });

@@ -15,6 +15,15 @@ const couponSchema = new mongoose.Schema({
     type: Number,
     default: Date.now(),
   },
+  isOneTime: {
+    type: Boolean,
+  },
+  description: {
+    type: String,
+  },
+  maximumDiscount: {
+    type: Number,
+  },
 });
 
 module.exports = mongoose.model("Coupons", couponSchema);

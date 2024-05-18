@@ -17,7 +17,12 @@ exports.addUpdateCoupon = catchAsyncErrors(async (req, res, next) => {
     discount,
     minimumCartValue,
     _id,
+    usagePerCustomer,
+    description,
+    maximumDiscount,
   } = req.body;
+
+  const isOneTime = usagePerCustomer === "one-time";
 
   const isExists = await Coupons.findOne({ _id: _id });
 
@@ -44,6 +49,9 @@ exports.addUpdateCoupon = catchAsyncErrors(async (req, res, next) => {
           type,
           discount,
           minimumCartValue,
+          description,
+          isOneTime,
+          maximumDiscount: type === "percentage" ? maximumDiscount : undefined,
         },
       }
     );
@@ -61,6 +69,9 @@ exports.addUpdateCoupon = catchAsyncErrors(async (req, res, next) => {
     type,
     discount,
     minimumCartValue,
+    description,
+    isOneTime,
+    maximumDiscount: type === "percentage" ? maximumDiscount : undefined,
   });
 
   await newCoupon.save();
@@ -114,15 +125,53 @@ exports.checkCode = catchAsyncErrors(async (req, res, next) => {
   });
 
   if (isExists) {
+    if (
+      isExists.isOneTime &&
+      currentUser.usedCoupons?.some((usedCoupon) =>
+        isExists._id.equals(usedCoupon)
+      )
+    ) {
+      await Cart.updateOne(
+        { uid: currentUser._id },
+        {
+          $set: {
+            coupon: {},
+            discountedPrice: 0,
+          },
+        }
+      );
+      return res
+        .status(200)
+        .json({ success: false, message: "Coupon already used" });
+    }
+    const discountedPrice =
+      isExists.type === "fixed"
+        ? isExists.discount
+        : (isExists.discount / 100) * cartItem.subTotalPrice;
+
+    if (isExists.type === "percentage") {
+      if (isExists.maximumDiscount < discountedPrice) {
+        await Cart.updateOne(
+          { uid: currentUser._id },
+          {
+            $set: {
+              coupon: {},
+              discountedPrice: 0,
+            },
+          }
+        );
+        return res
+          .status(200)
+          .json({ success: false, message: "Invalid coupon code" });
+      }
+    }
+
     await Cart.updateOne(
       { uid: currentUser._id },
       {
         $set: {
           coupon: isExists,
-          discountedPrice:
-            isExists.type === "fixed"
-              ? isExists.discount
-              : (isExists.discount / 100) * cartItem.subTotalPrice,
+          discountedPrice,
         },
       }
     );
@@ -142,5 +191,4 @@ exports.checkCode = catchAsyncErrors(async (req, res, next) => {
   return res
     .status(200)
     .json({ success: false, message: "Invalid coupon code" });
-  // return next(new ErrorHandler("Invalid coupon code", 401));
 });

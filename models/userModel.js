@@ -27,6 +27,9 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "customer",
   },
+  usedCoupons: {
+    type: [String],
+  },
   createdAt: {
     type: Number,
     default: Date.now(),
