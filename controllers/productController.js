@@ -71,6 +71,8 @@ exports.addProduct = catchAsyncErrors(async (req, res, next) => {
     _id,
   } = req.body;
 
+  console.log(req.body)
+
   const tags = JSON.parse(unTags);
   const variants = JSON.parse(unVariants);
   const combinations = JSON.parse(unCombinations);
