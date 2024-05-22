@@ -2,9 +2,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const express = require("express");
-const app = express();
 
-// const bodyParser = require("body-parser");
+const app = express();
 
 const cookieParser = require("cookie-parser");
 const connectDatabase = require("./config/database");
@@ -14,8 +13,6 @@ connectDatabase();
 connectCloudinary();
 
 app.use(express.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // Import Routers
