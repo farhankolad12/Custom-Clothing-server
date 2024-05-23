@@ -15,6 +15,7 @@ const {
   getProductsSitemap,
 } = require("../controllers/homeController");
 const { isAuthenticate, authorizeRoles } = require("../middlewares/auth");
+const { updateLogo } = require("../controllers/updateLogo");
 
 const router = express.Router();
 
@@ -37,6 +38,10 @@ router.route("/home-page").get(homePage);
 router
   .route("/home-page")
   .post(isAuthenticate, authorizeRoles("admin"), upload.any(), updateHomePage);
+
+router
+  .route("/update-logo")
+  .post(isAuthenticate, authorizeRoles("admin"), upload.any(), updateLogo);
 
 router.route("/update-cart").post(isAuthenticate, updateCart);
 

@@ -56,6 +56,10 @@ const homePageContentSchema = new mongoose.Schema({
       link: { type: String },
     },
   },
+  logo: {
+    id: { type: String },
+    link: { type: String },
+  },
 });
 
 module.exports = mongoose.model("HomePageContent", homePageContentSchema);
