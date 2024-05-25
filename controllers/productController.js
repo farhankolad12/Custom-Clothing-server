@@ -71,7 +71,7 @@ exports.addProduct = catchAsyncErrors(async (req, res, next) => {
     _id,
   } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
   const tags = JSON.parse(unTags);
   const variants = JSON.parse(unVariants);
@@ -149,39 +149,47 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
   const product = await Products.findOne({ _id: id });
   const token = req.cookies.token;
 
-  const productReviews = await Reviews.find({ productId: product?._id });
-  const sumOfMaxRatingOfUserCount = productReviews.length * 5;
-  const sumOfRating = productReviews.reduce((prev, review) => {
-    return prev + review.rating;
-  }, 0);
+  let totalRating = 0;
+  let productReviews = [];
+  let relatedProducts = [];
 
-  const totalRating = Math.ceil((sumOfRating * 5) / sumOfMaxRatingOfUserCount);
+  if (product) {
+    productReviews = await Reviews.find({ productId: product?._id });
+    const sumOfMaxRatingOfUserCount = productReviews.length * 5;
+    const sumOfRating = productReviews.reduce((prev, review) => {
+      return prev + review.rating;
+    }, 0);
 
-  const relatedProducts = await Products.find({
-    $and: [
-      {
-        _id: { $ne: product?._id },
-      },
-      {
-        $or: [
-          {
-            category: product?.category,
-          },
-          {
-            name: {
-              $regex: product?.name,
-              $options: "i",
+    totalRating = Math.ceil((sumOfRating * 5) / sumOfMaxRatingOfUserCount);
+  }
+
+  if (product) {
+    relatedProducts = await Products.find({
+      $and: [
+        {
+          _id: { $ne: product?._id },
+        },
+        {
+          $or: [
+            {
+              category: product?.category,
             },
-          },
-          {
-            "tags.tag": {
-              $in: product?.tags.map((tag) => tag.tag),
+            {
+              name: {
+                $regex: product?.name || "",
+                $options: "i",
+              },
             },
-          },
-        ],
-      },
-    ],
-  }).limit(4);
+            {
+              "tags.tag": {
+                $in: product?.tags.map((tag) => tag.tag),
+              },
+            },
+          ],
+        },
+      ],
+    }).limit(4);
+  }
 
   if (!token) {
     return res.status(200).json({
