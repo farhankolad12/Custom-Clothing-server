@@ -197,10 +197,10 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
     console.log(totalRating);
     console.log(productReviews);
     return res.status(200).json({
-      ...product?._doc,
       reviews: productReviews,
       totalRating,
       relatedProducts,
+      ...product?._doc,
     });
   }
 
