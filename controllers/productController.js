@@ -193,6 +193,9 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
     }).limit(4);
   }
 
+  console.log(totalRating);
+  console.log(productReviews);
+
   if (!token) {
     return res.status(200).json({
       ...product?._doc,
