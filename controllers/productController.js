@@ -155,7 +155,7 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
   let sumOfRating = 0;
 
   if (product) {
-    productReviews = await Reviews.find({ productId: product?._id });
+    productReviews = await Reviews.find({ productId: product._id });
     const sumOfMaxRatingOfUserCount = productReviews.length * 5;
     for (let i = 0; i < productReviews.length; i++) {
       const review = productReviews[i];
@@ -194,8 +194,6 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
   }
 
   if (!token) {
-    console.log(totalRating);
-    console.log(productReviews);
     return res.status(200).json({
       reviews: productReviews,
       totalRating,
