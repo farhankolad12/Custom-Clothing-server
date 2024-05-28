@@ -60,6 +60,15 @@ const homePageContentSchema = new mongoose.Schema({
     id: { type: String },
     link: { type: String },
   },
+  shippingConfig: {
+    shippingCharge: {
+      type: Number,
+    },
+    minimumAmount: {
+      type: Number,
+      default: undefined,
+    },
+  },
 });
 
 module.exports = mongoose.model("HomePageContent", homePageContentSchema);

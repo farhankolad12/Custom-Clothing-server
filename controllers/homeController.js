@@ -378,6 +378,10 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
   const { productId, selectedVariantIds, quantity, selectedCombination } =
     req.body;
 
+  const shippingConfig = (
+    await HomePageContent.findOne({}, { shippingConfig: 1 })
+  ).shippingConfig;
+
   if (quantity === 0) {
     return res.status(401).json({
       success: false,
@@ -402,6 +406,12 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
           selectedCombination,
         },
       ],
+      shippingPrice: shippingConfig?.minimumAmount
+        ? shippingConfig.minimumAmount <
+          selectedCombination.salePrice * quantity
+          ? 0
+          : shippingConfig.shippingCharge
+        : shippingConfig?.shippingCharge,
     });
 
     // console.log("hello");
@@ -469,6 +479,11 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
         },
         $set: {
           subTotalPrice,
+          shippingPrice: shippingConfig?.minimumAmount
+            ? shippingConfig.minimumAmount < subTotalPrice
+              ? 0
+              : shippingConfig.shippingCharge
+            : shippingConfig?.shippingCharge,
         },
       }
     );
@@ -482,6 +497,11 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
       $set: {
         products: updatedProducts,
         subTotalPrice,
+        shippingPrice: shippingConfig?.minimumAmount
+          ? shippingConfig.minimumAmount < subTotalPrice
+            ? 0
+            : shippingConfig.shippingCharge
+          : shippingConfig?.shippingCharge,
       },
     }
   );
@@ -494,6 +514,9 @@ exports.deleteCart = catchAsyncErrors(async (req, res, next) => {
   const currentUser = req.user;
 
   const cartItems = await Cart.findOne({ uid: currentUser._id });
+  const shippingConfig = (
+    await HomePageContent.findOne({}, { shippingConfig: 1 })
+  ).shippingConfig;
 
   const subTotalPrice = cartItems?.products.some(
     (productC) =>
@@ -522,6 +545,11 @@ exports.deleteCart = catchAsyncErrors(async (req, res, next) => {
             ? 0
             : cartItems.discountedPrice
           : cartItems.discountedPrice,
+        shippingPrice: shippingConfig?.minimumAmount
+          ? shippingConfig.minimumAmount < subTotalPrice
+            ? 0
+            : shippingConfig.shippingCharge
+          : shippingConfig?.shippingCharge,
       },
     }
   );
@@ -568,4 +596,85 @@ exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
   }
 
   return res.status(200).json(products);
+});
+
+exports.updateShippingConfig = catchAsyncErrors(async (req, res, next) => {
+  const { type, shippingConfig } = req.body;
+
+  const homePageContent = await HomePageContent.findOne();
+
+  const allCarts = await Cart.find();
+
+  if (homePageContent) {
+    await HomePageContent.updateOne(
+      { _id: homePageContent._id },
+      {
+        $set: {
+          shippingConfig:
+            type === "free-delivery"
+              ? { shippingCharge: 0 }
+              : type === "free-condition"
+              ? {
+                  shippingCharge: +shippingConfig.shippingCharge,
+                  minimumAmount: +shippingConfig.minimumAmount,
+                }
+              : { shippingCharge: +shippingConfig.shippingCharge },
+        },
+      }
+    );
+
+    for (let i = 0; i < allCarts.length; i++) {
+      const cart = allCarts[i];
+
+      await Cart.updateOne(
+        { _id: cart._id },
+        {
+          $set: {
+            shippingPrice:
+              type === "free-condition"
+                ? +shippingConfig.minimumAmount < cart.subTotalPrice
+                  ? 0
+                  : +shippingConfig.shippingCharge
+                : +shippingConfig?.shippingCharge,
+          },
+        }
+      );
+    }
+
+    return res.status(200).json({ success: true });
+  }
+
+  const newHomePage = new HomePageContent({
+    shippingConfig:
+      type === "free-delivery"
+        ? { shippingCharge: 0 }
+        : type === "free-condition"
+        ? {
+            shippingCharge: +shippingConfig.shippingCharge,
+            minimumAmount: +shippingConfig.minimumAmount,
+          }
+        : { shippingCharge: +shippingConfig.shippingCharge },
+  });
+
+  await newHomePage.save();
+
+  for (let i = 0; i < allCarts.length; i++) {
+    const cart = allCarts[i];
+
+    await Cart.updateOne(
+      { _id: cart._id },
+      {
+        $set: {
+          shippingPrice:
+            type === "free-condition"
+              ? +shippingConfig.minimumAmount < cart.subTotalPrice
+                ? 0
+                : +shippingConfig.shippingCharge
+              : +shippingConfig?.shippingCharge,
+        },
+      }
+    );
+  }
+
+  return res.status(200).json({ success: true });
 });
