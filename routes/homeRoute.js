@@ -14,6 +14,7 @@ const {
   updateNewsletter,
   getProductsSitemap,
   updateShippingConfig,
+  getFeatureProducts,
 } = require("../controllers/homeController");
 const { isAuthenticate, authorizeRoles } = require("../middlewares/auth");
 const { updateLogo } = require("../controllers/updateLogo");
@@ -39,6 +40,8 @@ router.route("/home-page").get(homePage);
 router
   .route("/home-page")
   .post(isAuthenticate, authorizeRoles("admin"), upload.any(), updateHomePage);
+
+router.route("/feature-products").get(getFeatureProducts);
 
 router
   .route("/update-logo")

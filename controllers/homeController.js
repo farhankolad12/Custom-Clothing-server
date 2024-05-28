@@ -678,3 +678,28 @@ exports.updateShippingConfig = catchAsyncErrors(async (req, res, next) => {
 
   return res.status(200).json({ success: true });
 });
+
+exports.getFeatureProducts = catchAsyncErrors(async (req, res, next) => {
+  const { searchParams } = req.query;
+
+  const params = new URLSearchParams(searchParams);
+
+  const currentPage = Number(params.get("page")) || 1;
+  const pageSize = 12;
+
+  const totalDocuments = await Products.countDocuments({ isFeatured: true });
+
+  const products = await Products.find({ isFeatured: true })
+    .limit(pageSize)
+    .skip(pageSize * (currentPage - 1))
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json({
+    products,
+    totalPages: Math.ceil(totalDocuments / pageSize),
+    currentPage,
+    totalDocuments,
+    startDocument: pageSize * (currentPage - 1) + 1,
+    lastDocument: pageSize * (currentPage - 1) + products.length,
+  });
+});
