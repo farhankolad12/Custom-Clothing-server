@@ -208,20 +208,25 @@ exports.authorizePayment = catchAsyncErrors(async (req, res, next) => {
   const userData_0 = new UserData()
     .setEmails([createHash("sha256").update(currentUser.email).digest("hex")])
     .setPhones([createHash("sha256").update(currentUser.phone).digest("hex")])
-    .setDatesOfBirth([
-      "8ad57e39330757feadb57f3e5fee0514c59a72d6140facc706b7477e0dacefb4",
-    ])
+    .setDatesOfBirth([currentUser.birthDate])
     .setLastNames([
       createHash("sha256").update(currentUser.lname).digest("hex"),
     ])
     .setFirstNames([
       createHash("sha256").update(currentUser.fname).digest("hex"),
     ])
+    .setGenders([
+      createHash("sha256")
+        .update(currentUser.gender === "Male" ? "m" : "f")
+        .digest("hex"),
+    ])
     .setCities([createHash("sha256").update(address.city).digest("hex")])
     .setZips([createHash("sha256").update(address.zipCode).digest("hex")])
     .setCountries([createHash("sha256").update(address.country).digest("hex")])
-    .setClientIpAddress(req.connection.remoteAddress)
-    .setClientUserAgent(req.headers["user-agent"]);
+    .setClientIpAddress(req.headers["x-real-ip"])
+    .setClientUserAgent(req.get("user-agent"))
+    .setFbp(req.cookies["_fbp"])
+    .setFbc(req.cookies["_fbc"]);
 
   const customData_0 = new CustomData()
     .setValue(

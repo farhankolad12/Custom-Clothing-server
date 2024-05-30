@@ -107,16 +107,15 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     .setDatesOfBirth([birthDate])
     .setLastNames([createHash("sha256").update(lname).digest("hex")])
     .setFirstNames([createHash("sha256").update(fname).digest("hex")])
-    .setCities([null])
-    .setZips([null])
-    .setCountries([null])
     .setClientIpAddress(req.headers["x-real-ip"])
     .setClientUserAgent(req.get("user-agent"))
     .setGenders([
       createHash("sha256")
         .update(gender === "Male" ? "m" : "f")
         .digest("hex"),
-    ]);
+    ])
+    .setFbp(req.cookies["_fbp"])
+    .setFbc(req.cookies["_fbc"]);
 
   const serverEvent_0 = new ServerEvent()
     .setEventName("CompleteRegistration")

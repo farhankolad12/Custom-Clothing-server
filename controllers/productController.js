@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const bizSdk = require("facebook-nodejs-business-sdk");
+const { createHash } = require("crypto");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
@@ -239,6 +241,61 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
         inWishlist: inWishlist ? true : false,
       });
     }
+
+    const ServerEvent = bizSdk.ServerEvent;
+    const CustomData = bizSdk.CustomData;
+    const EventRequest = bizSdk.EventRequest;
+    const UserData = bizSdk.UserData;
+
+    const access_token = process.env.PIXEL_ACCESS_TOKEN;
+    const pixel_id = process.env.PIXEL_ID;
+    const api = bizSdk.FacebookAdsApi.init(access_token);
+
+    let current_timestamp = Math.floor(new Date() / 1000);
+    const userData_0 = new UserData()
+      .setEmails([createHash("sha256").update(user.email).digest("hex")])
+      .setPhones([createHash("sha256").update(user.phone).digest("hex")])
+      .setDatesOfBirth([user.birthDate])
+      .setLastNames([createHash("sha256").update(user.lname).digest("hex")])
+      .setFirstNames([createHash("sha256").update(user.fname).digest("hex")])
+      .setClientIpAddress(req.headers["x-real-ip"])
+      .setClientUserAgent(req.get("user-agent"))
+      .setGenders([
+        createHash("sha256")
+          .update(user.gender === "Male" ? "m" : "f")
+          .digest("hex"),
+      ])
+      .setFbp(req.cookies["_fbp"])
+      .setFbc(req.cookies["_fbc"]);
+
+    const customData_0 = new CustomData()
+      .setValue(product.combinations[0].salePrice)
+      .setCurrency("INR")
+      .setContentName(product.name);
+
+    const serverEvent_0 = new ServerEvent()
+      .setEventName("ViewContent")
+      .setEventTime(current_timestamp)
+      .setCustomData(customData_0)
+      .setUserData(userData_0)
+      .setActionSource("website")
+      .setEventId(crypto.randomUUID())
+      .setEventSourceUrl(
+        "https://www.essentialsbyla.com/product/" + product._id
+      );
+
+    const eventsData = [serverEvent_0];
+    const eventRequest = new EventRequest(access_token, pixel_id).setEvents(
+      eventsData
+    );
+    eventRequest.execute().then(
+      (response) => {
+        console.log("Response: ", response);
+      },
+      (err) => {
+        console.error("Error: ", err);
+      }
+    );
 
     return res.status(200).json({
       ...product?._doc,
