@@ -110,8 +110,13 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     .setCities([null])
     .setZips([null])
     .setCountries([null])
-    .setClientIpAddress(req.connection.remoteAddress)
-    .setClientUserAgent(req.headers["user-agent"]);
+    .setClientIpAddress(req.headers["x-real-ip"])
+    .setClientUserAgent(req.get("user-agent"))
+    .setGenders([
+      createHash("sha256")
+        .update(gender === "Male" ? "m" : "f")
+        .digest("hex"),
+    ]);
 
   const serverEvent_0 = new ServerEvent()
     .setEventName("CompleteRegistration")
