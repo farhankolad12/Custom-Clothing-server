@@ -20,7 +20,7 @@ exports.addQueries = catchAsyncErrors(async (req, res, next) => {
 
   const userData_0 = new UserData()
     .setEmails([createHash("sha256").update(email).digest("hex")])
-    .setFirstNames([createHash("sha256").update(fname).digest("hex")])
+    .setFirstNames([createHash("sha256").update(name).digest("hex")])
     .setClientIpAddress(req.headers["x-real-ip"])
     .setClientUserAgent(req.get("user-agent"))
     .setFbp(req.cookies["_fbp"])
