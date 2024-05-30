@@ -1,5 +1,7 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const bizSdk = require("facebook-nodejs-business-sdk");
+const { createHash } = require("crypto");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
@@ -190,6 +192,69 @@ exports.authorizePayment = catchAsyncErrors(async (req, res, next) => {
       { $push: { usedCoupons: isCoupon._id } }
     );
   }
+
+  const ServerEvent = bizSdk.ServerEvent;
+  const EventRequest = bizSdk.EventRequest;
+  const UserData = bizSdk.UserData;
+  const CustomData = bizSdk.CustomData;
+  const Content = bizSdk.Content;
+
+  const access_token = process.env.PIXEL_ACCESS_TOKEN;
+  const pixel_id = process.env.PIXEL_ID;
+  const api = bizSdk.FacebookAdsApi.init(access_token);
+
+  let current_timestamp = Math.floor(new Date() / 1000);
+
+  const userData_0 = new UserData()
+    .setEmails([createHash("sha256").update(currentUser.email).digest("hex")])
+    .setPhones([createHash("sha256").update(currentUser.phone).digest("hex")])
+    .setDatesOfBirth([
+      "8ad57e39330757feadb57f3e5fee0514c59a72d6140facc706b7477e0dacefb4",
+    ])
+    .setLastNames([
+      createHash("sha256").update(currentUser.lname).digest("hex"),
+    ])
+    .setFirstNames([
+      createHash("sha256").update(currentUser.fname).digest("hex"),
+    ])
+    .setCities([createHash("sha256").update(address.city).digest("hex")])
+    .setZips([createHash("sha256").update(address.zipCode).digest("hex")])
+    .setCountries([createHash("sha256").update(address.country).digest("hex")])
+    .setClientIpAddress(req.connection.remoteAddress)
+    .setClientUserAgent(req.headers["user-agent"]);
+
+  const customData_0 = new CustomData()
+    .setValue(
+      await (cartItem.subTotalPrice -
+        (isCoupon
+          ? cartItem.coupon.type === "fixed"
+            ? cartItem.coupon.discount
+            : (cartItem.coupon.discount / 100) * cartItem.subTotalPrice
+          : 0))
+    )
+    .setCurrency("INR");
+
+  const serverEvent_0 = new ServerEvent()
+    .setEventName("Purchase")
+    .setEventTime(current_timestamp)
+    .setUserData(userData_0)
+    .setCustomData(customData_0)
+    .setActionSource("website")
+    .setEventId(crypto.randomUUID())
+    .setEventSourceUrl("https://www.essentialsbyla.com/cart");
+
+  const eventsData = [serverEvent_0];
+  const eventRequest = new EventRequest(access_token, pixel_id).setEvents(
+    eventsData
+  );
+  eventRequest.execute().then(
+    (response) => {
+      console.log("Response: ", response);
+    },
+    (err) => {
+      console.error("Error: ", err);
+    }
+  );
 
   return res.status(200).json({ success: true });
 });

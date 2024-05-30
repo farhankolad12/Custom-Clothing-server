@@ -1,5 +1,7 @@
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
+const { createHash } = require("crypto");
+const bizSdk = require("facebook-nodejs-business-sdk");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -83,11 +85,54 @@ exports.register = catchAsyncErrors(async (req, res, next) => {
     fname,
     lname,
     phone,
-    birthDate: new Date(birthDate).getMilliseconds(),
+    birthDate,
     email,
     gender,
     password: hashPassword,
   });
+
+  const ServerEvent = bizSdk.ServerEvent;
+  const EventRequest = bizSdk.EventRequest;
+  const UserData = bizSdk.UserData;
+
+  const access_token = process.env.PIXEL_ACCESS_TOKEN;
+  const pixel_id = process.env.PIXEL_ID;
+  const api = bizSdk.FacebookAdsApi.init(access_token);
+
+  let current_timestamp = Math.floor(new Date() / 1000);
+
+  const userData_0 = new UserData()
+    .setEmails([createHash("sha256").update(email).digest("hex")])
+    .setPhones([createHash("sha256").update(phone).digest("hex")])
+    .setDatesOfBirth([birthDate])
+    .setLastNames([createHash("sha256").update(lname).digest("hex")])
+    .setFirstNames([createHash("sha256").update(fname).digest("hex")])
+    .setCities([null])
+    .setZips([null])
+    .setCountries([null])
+    .setClientIpAddress(req.connection.remoteAddress)
+    .setClientUserAgent(req.headers["user-agent"]);
+
+  const serverEvent_0 = new ServerEvent()
+    .setEventName("CompleteRegistration")
+    .setEventTime(current_timestamp)
+    .setUserData(userData_0)
+    .setActionSource("website")
+    .setEventId(crypto.randomUUID())
+    .setEventSourceUrl("https://www.essentialsbyla.com/signup");
+
+  const eventsData = [serverEvent_0];
+  const eventRequest = new EventRequest(access_token, pixel_id).setEvents(
+    eventsData
+  );
+  eventRequest.execute().then(
+    (response) => {
+      console.log("Response: ", response);
+    },
+    (err) => {
+      console.error("Error: ", err);
+    }
+  );
 
   sendToken({ user, cartItems: [] }, 200, res);
 });
