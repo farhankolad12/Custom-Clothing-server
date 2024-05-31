@@ -271,7 +271,7 @@ exports.filterProducts = catchAsyncErrors(async (req, res, next) => {
               },
               {
                 "tags.tag": {
-                  $regex: params.get("query").split(" ").join("-") || "",
+                  $regex: params.get("query") || "",
                   $options: "i",
                 },
               },
