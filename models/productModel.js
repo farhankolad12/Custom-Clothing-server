@@ -65,6 +65,10 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: Date.now(),
   },
+  inStock: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 module.exports = mongoose.model("Products", productSchema);

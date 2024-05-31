@@ -46,8 +46,6 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
     return res.status(200).json({ success: true });
   }
 
-  // console.log(img1);
-
   switch (changeType) {
     case "headerText":
       await HomePageContent.updateOne(
@@ -158,12 +156,14 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
 
   const newCollections = await Products.find({
     createdAt: { $gte: myEpoch, $lte: Date.now() },
+    inStock: true,
   })
     .sort({ createdAt: -1 })
     .limit(8);
   const featuredProducts = await Products.find({
     _id: { $nin: newCollections.map((p1) => p1._id) },
     isFeatured: true,
+    inStock: true,
   })
     .sort({ createdAt: -1 })
     .limit(8);
@@ -196,8 +196,6 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
   let user = undefined;
   try {
     const decodedData = jwt.verify(token, process.env.JWT_SECRET);
-
-    // console.log(decodedData);
 
     user = await Users.findOne(
       { _id: decodedData?.id, role: "customer" },
@@ -265,7 +263,10 @@ exports.getWishlists = catchAsyncErrors(async (req, res, next) => {
   for (let i = 0; i < wishlists.products.length; i++) {
     const wishlistProduct = wishlists.products[i];
 
-    const product = await Products.findOne({ _id: wishlistProduct.productId });
+    const product = await Products.findOne({
+      _id: wishlistProduct.productId,
+      inStock: true,
+    });
 
     resWishlists.push({ ...product._doc, inWishlist: true });
   }
@@ -370,10 +371,13 @@ exports.updateWishlist = catchAsyncErrors(async (req, res, next) => {
 
   const customData_0 = new CustomData()
     .setValue(
-      (await Products.findOne({ _id: productId })).combinations[0].salePrice
+      (await Products.findOne({ _id: productId, inStock: true }))
+        .combinations[0].salePrice
     )
     .setCurrency("INR")
-    .setContentName((await Products.findOne({ _id: productId })).name);
+    .setContentName(
+      (await Products.findOne({ _id: productId, inStock: true })).name
+    );
 
   const serverEvent_0 = new ServerEvent()
     .setEventName("AddToWishlist")
@@ -412,7 +416,10 @@ exports.getCart = catchAsyncErrors(async (req, res, next) => {
   for (let i = 0; i < userCart?.products.length; i++) {
     const cartProduct = userCart.products[i];
 
-    const product = await Products.findOne({ _id: cartProduct.productId });
+    const product = await Products.findOne({
+      _id: cartProduct.productId,
+      inStock: true,
+    });
 
     resData.push({
       ...product._doc,
@@ -474,8 +481,6 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
         : shippingConfig?.shippingCharge,
     });
 
-    // console.log("hello");
-
     await newCart.save();
     const ServerEvent = bizSdk.ServerEvent;
     const EventRequest = bizSdk.EventRequest;
@@ -510,10 +515,13 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
 
     const customData_0 = new CustomData()
       .setValue(
-        (await Products.findOne({ _id: productId })).combinations[0].salePrice
+        (await Products.findOne({ _id: productId, inStock: true }))
+          .combinations[0].salePrice
       )
       .setCurrency("INR")
-      .setContentName((await Products.findOne({ _id: productId })).name);
+      .setContentName(
+        (await Products.findOne({ _id: productId, inStock: true })).name
+      );
 
     const serverEvent_0 = new ServerEvent()
       .setEventName("AddToCart")
@@ -537,8 +545,6 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
     );
     return res.status(200).json({ success: true });
   }
-
-  // console.log("world");
 
   let updatedProducts = [];
 
@@ -639,10 +645,13 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
 
     const customData_0 = new CustomData()
       .setValue(
-        (await Products.findOne({ _id: productId })).combinations[0].salePrice
+        (await Products.findOne({ _id: productId, inStock: true }))
+          .combinations[0].salePrice
       )
       .setCurrency("INR")
-      .setContentName((await Products.findOne({ _id: productId })).name);
+      .setContentName(
+        (await Products.findOne({ _id: productId, inStock: true })).name
+      );
 
     const serverEvent_0 = new ServerEvent()
       .setEventName("AddToCart")
@@ -715,10 +724,13 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
 
   const customData_0 = new CustomData()
     .setValue(
-      (await Products.findOne({ _id: productId })).combinations[0].salePrice
+      (await Products.findOne({ _id: productId, inStock: true }))
+        .combinations[0].salePrice
     )
     .setCurrency("INR")
-    .setContentName((await Products.findOne({ _id: productId })).name);
+    .setContentName(
+      (await Products.findOne({ _id: productId, inStock: true })).name
+    );
 
   const serverEvent_0 = new ServerEvent()
     .setEventName("AddToCart")
@@ -817,7 +829,7 @@ exports.getProductsSitemap = catchAsyncErrors(async (req, res, next) => {
   let products = [];
 
   while (true) {
-    const batchProducts = await Products.find({}, { _id: 1 })
+    const batchProducts = await Products.find({}, { _id: 1, inStock: true })
       .skip(skip)
       .limit(batchSize);
 
@@ -923,7 +935,7 @@ exports.getFeatureProducts = catchAsyncErrors(async (req, res, next) => {
 
   const totalDocuments = await Products.countDocuments({ isFeatured: true });
 
-  const products = await Products.find({ isFeatured: true })
+  const products = await Products.find({ isFeatured: true, inStock: true })
     .limit(pageSize)
     .skip(pageSize * (currentPage - 1))
     .sort({ createdAt: -1 });

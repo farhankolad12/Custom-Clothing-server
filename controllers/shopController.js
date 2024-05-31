@@ -39,8 +39,6 @@ exports.getCategoryProducts = catchAsyncErrors(async (req, res, next) => {
     return res.status(200).json({ notCategory: true });
   }
 
-  // console.log(variants);
-
   const sortQuery =
     params.get("sort-by") === "low-high"
       ? { "combinations.salePrice": 1 }
@@ -52,6 +50,7 @@ exports.getCategoryProducts = catchAsyncErrors(async (req, res, next) => {
 
   const filterQuery = {
     $and: [
+      { inStock: true },
       {
         category: {
           $regex: categoryName.replaceAll("%20", " "),
@@ -225,8 +224,6 @@ exports.filterProducts = catchAsyncErrors(async (req, res, next) => {
   const minPrice = params.get("min") || 0;
   const maxPrice = params.get("max") || Number.MAX_SAFE_INTEGER;
 
-  // console.log(variants);
-
   const sortQuery =
     params.get("sort-by") === "low-high"
       ? { price: 1 }
@@ -238,6 +235,7 @@ exports.filterProducts = catchAsyncErrors(async (req, res, next) => {
 
   const filterQuery = {
     $and: [
+      { inStock: true },
       {
         category: {
           $in:

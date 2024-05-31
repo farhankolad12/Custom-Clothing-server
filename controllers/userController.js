@@ -170,7 +170,10 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
     for (let i = 0; i < userCart?.products.length; i++) {
       const cartProduct = userCart.products[i];
 
-      const product = await Products.findOne({ _id: cartProduct.productId });
+      const product = await Products.findOne({
+        _id: cartProduct.productId,
+        inStock: true,
+      });
 
       resData.push({
         ...product._doc,

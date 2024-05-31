@@ -21,12 +21,6 @@ exports.getProductFilters = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-exports.getAllProducts = catchAsyncErrors(async (req, res, next) => {
-  const allProducts = await Products.find({}, { _id: 1 });
-
-  return res.status(200).json(allProducts);
-});
-
 exports.getProducts = catchAsyncErrors(async (req, res, next) => {
   const { searchParams } = req.query;
 
@@ -72,8 +66,6 @@ exports.addProduct = catchAsyncErrors(async (req, res, next) => {
     images,
     _id,
   } = req.body;
-
-  console.log(req.body);
 
   const tags = JSON.parse(unTags);
   const variants = JSON.parse(unVariants);
@@ -148,7 +140,7 @@ exports.deleteProduct = catchAsyncErrors(async (req, res, next) => {
 exports.getProduct = catchAsyncErrors(async (req, res, next) => {
   const { id } = req.query;
 
-  const product = await Products.findOne({ _id: id });
+  const product = await Products.findOne({ _id: id, inStock: true });
   const token = req.cookies.token;
 
   let totalRating = 0;
@@ -170,6 +162,7 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
   if (product) {
     relatedProducts = await Products.find({
       $and: [
+        { inStock: true },
         {
           _id: { $ne: product?._id },
         },
@@ -191,16 +184,17 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
             },
           ],
         },
+        { inStock: true },
       ],
     }).limit(4);
   }
 
   if (!token) {
     return res.status(200).json({
+      ...product?._doc,
       reviews: productReviews,
       totalRating,
       relatedProducts,
-      ...product?._doc,
     });
   }
 
@@ -312,4 +306,12 @@ exports.getProduct = catchAsyncErrors(async (req, res, next) => {
     totalRating,
     relatedProducts,
   });
+});
+
+exports.updateInStock = catchAsyncErrors(async (req, res, next) => {
+  const { _id, inStock } = req.body;
+
+  await Products.updateOne({ _id: _id }, { $set: { inStock } });
+
+  return res.status(200).json({ success: true });
 });

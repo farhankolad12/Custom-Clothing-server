@@ -44,8 +44,6 @@ exports.createOrder = catchAsyncErrors(async (req, res) => {
     receipt: cartItem._id,
   });
 
-  // console.log(order);
-
   if (!order) {
     return res
       .status(500)
@@ -131,6 +129,7 @@ exports.authorizePayment = catchAsyncErrors(async (req, res, next) => {
 
     const cartProducts = await Products.findOne({
       _id: cartProduct.productId,
+      inStock: true,
     });
 
     products.push({

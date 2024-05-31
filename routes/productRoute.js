@@ -11,6 +11,7 @@ const {
   getProduct,
   getAllProducts,
   getCategoryProducts,
+  updateInStock,
 } = require("../controllers/productController");
 
 const storage = new Multer.memoryStorage();
@@ -35,6 +36,10 @@ router
   .route("/product")
   .post(isAuthenticate, authorizeRoles("admin"), upload.any(), addProduct);
 
+router
+  .route("/update-stock")
+  .post(isAuthenticate, authorizeRoles("admin"), updateInStock);
+
 router.route("/product").get(getProduct);
 
 router
@@ -44,7 +49,5 @@ router
 router
   .route("/products")
   .get(isAuthenticate, authorizeRoles("admin"), getProducts);
-
-router.route("/all-products").get(getAllProducts);
 
 module.exports = router;

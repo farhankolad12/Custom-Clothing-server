@@ -151,6 +151,8 @@ exports.updateStatus = catchAsyncErrors(async (req, res, next) => {
               ? "Your order has been received"
               : status === "Processing"
               ? "Your order is in the process"
+              : status === "Shipped"
+              ? "Your order has been shipped"
               : status === "Delivered"
               ? "Your order has been delivered to you"
               : status === "Cancel"
