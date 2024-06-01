@@ -15,6 +15,7 @@ const {
   getProductsSitemap,
   updateShippingConfig,
   getFeatureProducts,
+  getDashboard,
 } = require("../controllers/homeController");
 const { isAuthenticate, authorizeRoles } = require("../middlewares/auth");
 const { updateLogo } = require("../controllers/updateLogo");
@@ -36,6 +37,10 @@ router.use(
 );
 
 router.route("/home-page").get(homePage);
+
+router
+  .route("/dashboard")
+  .get(isAuthenticate, authorizeRoles("admin"), getDashboard);
 
 router
   .route("/home-page")

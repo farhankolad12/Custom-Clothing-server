@@ -6,6 +6,7 @@ const bizSdk = require("facebook-nodejs-business-sdk");
 
 const Cart = require("../models/cartModel");
 const Users = require("../models/userModel");
+const Orders = require("../models/orderModel");
 const Products = require("../models/productModel");
 const Newsletter = require("../models/newsletterModel");
 const Categories = require("../models/categoryModel");
@@ -947,5 +948,253 @@ exports.getFeatureProducts = catchAsyncErrors(async (req, res, next) => {
     totalDocuments,
     startDocument: pageSize * (currentPage - 1) + 1,
     lastDocument: pageSize * (currentPage - 1) + products.length,
+  });
+});
+
+exports.getDashboard = catchAsyncErrors(async (req, res, next) => {
+  const d = new Date();
+
+  const recentOrders = await Orders.find().sort({ paidAt: -1 }).limit(8);
+
+  const todayOrders = await Orders.find({
+    paidAt: { $gte: d.setHours(0, 0, 0, 0) },
+  });
+
+  let totalTodayOrdersVal = 0;
+  let totalTodayOrdersCardVal = 0;
+  let totalTodayOrdersUpiVal = 0;
+  let totalTodayOrdersNetVal = 0;
+  let totalTodayOrdersWalletVal = 0;
+
+  for (let i = 0; i < todayOrders.length; i++) {
+    const order = todayOrders[i];
+
+    totalTodayOrdersVal =
+      totalTodayOrdersVal +
+      (order.subtotal + order.shippingPrice - order.discountedPrice);
+
+    switch (order.method) {
+      case "card":
+        totalTodayOrdersCardVal =
+          totalTodayOrdersCardVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "upi":
+        totalTodayOrdersUpiVal =
+          totalTodayOrdersUpiVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "netbanking":
+        totalTodayOrdersNetVal =
+          totalTodayOrdersNetVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "wallet":
+        totalTodayOrdersWalletVal =
+          totalTodayOrdersWalletVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      default:
+        break;
+    }
+  }
+
+  d.setDate(1);
+  d.setHours(0);
+  d.setMinutes(0);
+  d.setSeconds(0);
+
+  const thisMonthOrders = await Orders.find({
+    paidAt: { $gte: d.getTime() },
+  });
+
+  let totalThisMonthOrdersVal = 0;
+  let totalThisMonthOrdersCardVal = 0;
+  let totalThisMonthOrdersUpiVal = 0;
+  let totalThisMonthOrdersNetVal = 0;
+  let totalThisMonthOrdersWalletVal = 0;
+
+  for (let i = 0; i < thisMonthOrders.length; i++) {
+    const order = thisMonthOrders[i];
+
+    totalThisMonthOrdersVal =
+      totalThisMonthOrdersVal +
+      (order.subtotal + order.shippingPrice - order.discountedPrice);
+
+    switch (order.method) {
+      case "card":
+        totalThisMonthOrdersCardVal =
+          totalThisMonthOrdersCardVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "upi":
+        totalThisMonthOrdersUpiVal =
+          totalThisMonthOrdersUpiVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "netbanking":
+        totalThisMonthOrdersNetVal =
+          totalThisMonthOrdersNetVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "wallet":
+        totalThisMonthOrdersWalletVal =
+          totalThisMonthOrdersWalletVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      default:
+        break;
+    }
+  }
+
+  d.setMonth(d.getMonth() - 1);
+
+  const lastMonthOrders = await Orders.find({
+    paidAt: { $gte: d.getTime() },
+  });
+
+  let totalLastMonthOrdersVal = 0;
+  let totalLastMonthOrdersCardVal = 0;
+  let totalLastMonthOrdersUpiVal = 0;
+  let totalLastMonthOrdersNetVal = 0;
+  let totalLastMonthOrdersWalletVal = 0;
+
+  for (let i = 0; i < lastMonthOrders.length; i++) {
+    const order = lastMonthOrders[i];
+
+    totalLastMonthOrdersVal =
+      totalLastMonthOrdersVal +
+      (order.subtotal + order.shippingPrice - order.discountedPrice);
+
+    switch (order.method) {
+      case "card":
+        totalLastMonthOrdersCardVal =
+          totalLastMonthOrdersCardVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "upi":
+        totalLastMonthOrdersUpiVal =
+          totalLastMonthOrdersUpiVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "netbanking":
+        totalLastMonthOrdersNetVal =
+          totalLastMonthOrdersNetVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "wallet":
+        totalLastMonthOrdersWalletVal =
+          totalLastMonthOrdersWalletVal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      default:
+        break;
+    }
+  }
+
+  let allTimeTotal = 0;
+  let allTimeCardTotal = 0;
+  let allTimeUpiTotal = 0;
+  let allTimeNetTotal = 0;
+  let allTimeWalletTotal = 0;
+
+  let pendingOrders = 0;
+  let processingOrders = 0;
+  let shippedOrders = 0;
+  let deliveryOrders = 0;
+
+  const allOrders = await Orders.find();
+
+  for (let i = 0; i < allOrders.length; i++) {
+    const order = allOrders[i];
+
+    allTimeTotal =
+      allTimeTotal +
+      (order.subtotal + order.shippingPrice - order.discountedPrice);
+
+    switch (order.status[order.status.length - 1].name) {
+      case "Pending":
+        pendingOrders = pendingOrders + 1;
+        break;
+
+      case "Processing":
+        processingOrders = processingOrders + 1;
+        break;
+
+      case "Shipped":
+        shippedOrders = shippedOrders + 1;
+        break;
+
+      case "Delivered":
+        deliveryOrders = deliveryOrders + 1;
+        break;
+
+      default:
+        break;
+    }
+
+    switch (order.method) {
+      case "card":
+        allTimeCardTotal =
+          allTimeCardTotal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "upi":
+        allTimeUpiTotal =
+          allTimeUpiTotal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "netbanking":
+        allTimeNetTotal =
+          allTimeNetTotal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      case "wallet":
+        allTimeWalletTotal =
+          allTimeWalletTotal +
+          (order.subtotal + order.shippingPrice - order.discountedPrice);
+        break;
+      default:
+        break;
+    }
+  }
+
+  return res.status(200).json({
+    todayOrders: {
+      totalTodayOrdersVal,
+      totalTodayOrdersCardVal,
+      totalTodayOrdersUpiVal,
+      totalTodayOrdersNetVal,
+      totalTodayOrdersWalletVal,
+    },
+    thisMonthOrders: {
+      totalThisMonthOrdersVal,
+      totalThisMonthOrdersCardVal,
+      totalThisMonthOrdersUpiVal,
+      totalThisMonthOrdersNetVal,
+      totalThisMonthOrdersWalletVal,
+    },
+    lastMonthOrders: {
+      totalLastMonthOrdersVal,
+      totalLastMonthOrdersCardVal,
+      totalLastMonthOrdersUpiVal,
+      totalLastMonthOrdersNetVal,
+      totalLastMonthOrdersWalletVal,
+    },
+    allTime: {
+      allTimeTotal,
+      allTimeCardTotal,
+      allTimeUpiTotal,
+      allTimeNetTotal,
+      allTimeWalletTotal,
+    },
+    ordersDetail: {
+      pendingOrders,
+      processingOrders,
+      shippedOrders,
+      deliveryOrders,
+      totalOrders: allOrders.length,
+    },
+    recentOrders,
   });
 });
