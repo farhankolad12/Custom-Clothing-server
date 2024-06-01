@@ -5,6 +5,9 @@ const { createHash } = require("crypto");
 
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 
+const { createShipRocketOrder } = require("../utils/createShipRocketOrder");
+const { getToken } = require("../utils/shipRocketToken");
+
 const Notifications = require("../models/notificationModel");
 const Products = require("../models/productModel");
 const Coupons = require("../models/couponModel");
@@ -169,6 +172,52 @@ exports.authorizePayment = catchAsyncErrors(async (req, res, next) => {
   await newOrder.save();
 
   await Cart.deleteOne({ uid: currentUser._id });
+
+  const shipRocketToken = await getToken();
+
+  await createShipRocketOrder({
+    token: shipRocketToken,
+    order_id: newOrder._id,
+    order_date: new Date().toDateString(),
+    pickup_location: "Primary",
+    billing_customer_name: address.fname,
+    billing_last_name: address.lname,
+    billing_address: address.streetAddr1,
+    billing_address_2: address.streetAddr2,
+    billing_city: address.city,
+    billing_pincode: address.zipCode,
+    billing_state: address.state,
+    billing_country: address.country,
+    billing_email: address.email,
+    billing_phone: address.phone,
+    shipping_is_billing: true,
+    order_items: products.map((product) => {
+      return {
+        name: product.name,
+        sku: product._id,
+        units: product.quantity,
+        selling_price: product.selectedCombination.salePrice,
+      };
+    }),
+    payment_method: "Prepaid",
+    shipping_charges: cartItem.shippingPrice,
+    total_discount: isCoupon
+      ? cartItem.coupon.type === "fixed"
+        ? cartItem.coupon.discount
+        : (cartItem.coupon.discount / 100) * cartItem.subTotalPrice
+      : 0,
+    sub_total:
+      cartItem.subTotalPrice -
+      (isCoupon
+        ? cartItem.coupon.type === "fixed"
+          ? cartItem.coupon.discount
+          : (cartItem.coupon.discount / 100) * cartItem.subTotalPrice
+        : 0),
+    length: 1,
+    breadth: 1,
+    height: 1,
+    weight: 1,
+  });
 
   const newNotification = new Notifications({
     orderTotal:

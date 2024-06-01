@@ -1,0 +1,65 @@
+exports.createShipRocketOrder = async ({
+  token,
+  order_id,
+  order_date,
+  pickup_location,
+  billing_customer_name,
+  billing_address,
+  billing_address_2,
+  billing_city,
+  billing_pincode,
+  billing_state,
+  billing_country,
+  billing_email,
+  billing_phone,
+  shipping_is_billing,
+  order_items,
+  payment_method,
+  shipping_charges,
+  total_discount,
+  billing_last_name,
+  sub_total,
+  length,
+  breadth,
+  height,
+  weight,
+}) => {
+  const res = await fetch(
+    "https://apiv2.shiprocket.in/v1/external/orders/create/adhoc",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order_id,
+        order_date,
+        pickup_location,
+        billing_customer_name,
+        billing_address,
+        billing_last_name,
+        billing_address_2,
+        billing_city,
+        billing_pincode,
+        billing_state,
+        billing_country,
+        billing_email,
+        billing_phone,
+        shipping_is_billing,
+        order_items,
+        payment_method,
+        shipping_charges,
+        total_discount,
+        sub_total,
+        length,
+        breadth,
+        height,
+        weight,
+      }),
+    }
+  );
+  const data = await res.json();
+
+  console.log(data);
+};
