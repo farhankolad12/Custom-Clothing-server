@@ -13,7 +13,7 @@ const couponSchema = new mongoose.Schema({
   minimumCartValue: { type: Number },
   createdAt: {
     type: Number,
-    default: Date.now(),
+    default: Date.now,
   },
   isOneTime: {
     type: Boolean,
