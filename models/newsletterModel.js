@@ -5,7 +5,7 @@ const newsletterSchema = new mongoose.Schema({
   newsletterSend: { type: Boolean, default: false },
   subscribedAt: {
     type: Number,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
