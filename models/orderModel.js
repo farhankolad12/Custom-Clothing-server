@@ -99,7 +99,7 @@ const orderSchema = new mongoose.Schema({
     minimumCartValue: { type: Number },
     createdAt: {
       type: Number,
-      default: Date.now(),
+      default: Date.now,
     },
   },
   status: [
@@ -164,7 +164,7 @@ const orderSchema = new mongoose.Schema({
   },
   paidAt: {
     type: Number,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
