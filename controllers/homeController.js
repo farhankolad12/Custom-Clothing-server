@@ -14,6 +14,7 @@ const Wishlists = require("../models/wishlistModel");
 const HomePageContent = require("../models/homePageContentModel");
 
 const handleUpload = require("../utils/uploadImage");
+const { abandonedEmail } = require("../utils/sendEmail");
 
 exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
   const { changeType, data } = req.body;
@@ -148,15 +149,7 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
 });
 
 exports.homePage = catchAsyncErrors(async (req, res, next) => {
-  const date = new Date();
-
-  date.setDate(date.getDate() - 6);
-
-  const myDate = new Date(date);
-  const myEpoch = myDate.getTime();
-
   const newCollections = await Products.find({
-    createdAt: { $gte: myEpoch, $lte: Date.now() },
     inStock: true,
   })
     .sort({ createdAt: -1 })
@@ -401,6 +394,77 @@ exports.updateWishlist = catchAsyncErrors(async (req, res, next) => {
     }
   );
   return res.status(200).json({ success: true });
+});
+
+exports.sendAbandonedEmail = catchAsyncErrors(async (req, res, next) => {
+  const { fname, lname, email, products, totalPrice } = req.body;
+
+  await abandonedEmail(fname, lname, email, totalPrice, products);
+
+  return res.status(200).json({ success: true });
+});
+
+exports.getAllCarts = catchAsyncErrors(async (req, res, next) => {
+  const { searchParams } = req.query;
+
+  const params = new URLSearchParams(searchParams);
+
+  const currentPage = Number(params.get("page")) || 1;
+  const pageSize = 5;
+
+  const totalDocuments = await Cart.countDocuments();
+
+  const carts = await Cart.find()
+    .limit(pageSize)
+    .skip(pageSize * (currentPage - 1))
+    .sort({ createdAt: -1 });
+
+  const resData = [];
+  for (let i = 0; i < carts.length; i++) {
+    const userResData = [];
+    const userCart = carts[i];
+
+    const userInfo = await Users.findOne(
+      { _id: userCart.uid },
+      {
+        birthDate: 0,
+        createdAt: 0,
+        gender: 0,
+        password: 0,
+        role: 0,
+        usedCoupons: 0,
+      }
+    );
+    for (let i = 0; i < userCart?.products.length; i++) {
+      const cartProduct = userCart.products[i];
+
+      const product = await Products.findOne({
+        _id: cartProduct.productId,
+        inStock: true,
+      });
+
+      userResData.push({
+        ...product._doc,
+        quantity: cartProduct.quantity,
+        selectedVariantIds: cartProduct.selectedVariationIds,
+        selectedCombination: cartProduct.selectedCombination,
+      });
+    }
+    resData.push({
+      ...userInfo._doc,
+      ...userCart._doc,
+      products: userResData,
+    });
+  }
+
+  return res.status(200).json({
+    totalPages: Math.ceil(totalDocuments / pageSize),
+    currentPage,
+    totalDocuments,
+    startDocument: pageSize * (currentPage - 1) + 1,
+    lastDocument: pageSize * (currentPage - 1) + carts.length,
+    carts: resData,
+  });
 });
 
 exports.getCart = catchAsyncErrors(async (req, res, next) => {

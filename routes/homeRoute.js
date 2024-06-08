@@ -16,6 +16,8 @@ const {
   updateShippingConfig,
   getFeatureProducts,
   getDashboard,
+  getAllCarts,
+  sendAbandonedEmail,
 } = require("../controllers/homeController");
 const { isAuthenticate, authorizeRoles } = require("../middlewares/auth");
 const { updateLogo } = require("../controllers/updateLogo");
@@ -59,6 +61,14 @@ router
 router.route("/update-cart").post(isAuthenticate, updateCart);
 
 router.route("/get-cart").get(isAuthenticate, getCart);
+
+router
+  .route("/user-carts")
+  .get(isAuthenticate, authorizeRoles("admin"), getAllCarts);
+
+router
+  .route("/send-email-cart")
+  .post(isAuthenticate, authorizeRoles("admin"), sendAbandonedEmail);
 
 router.route("/delete-cart").post(isAuthenticate, deleteCart);
 
