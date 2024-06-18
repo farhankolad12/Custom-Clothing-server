@@ -299,7 +299,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
   const isExistsToken = await ResetTokens.findOne({
     token,
-    expiredAt: { $lt: Date.now() },
+    expiredAt: { $gt: Date.now() },
   });
 
   console.log(isExistsToken)
