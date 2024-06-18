@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 function dateNow() {
-  return Date.now() + 86400
+  return Date.now() + 864000
 }
 
 const ResetTokensSchema = new mongoose.Schema({
