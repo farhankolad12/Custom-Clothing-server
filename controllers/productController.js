@@ -15,6 +15,14 @@ const filterQuery = require("../utils/filterQuery");
 const handleUpload = require("../utils/uploadImage");
 const { PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
 
+const s3Client = new S3Client({
+  region: "ap-south-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
+  },
+});
+
 exports.getProductFilters = catchAsyncErrors(async (req, res, next) => {
   return res.status(200).json({
     attributes: await Attributes.find().sort({ createdAt: -1 }),
@@ -85,7 +93,7 @@ exports.addProduct = catchAsyncErrors(async (req, res, next) => {
       ContentDisposition: "inline",
       ContentType: "image/jpeg",
     });
-    await S3Client.send(params);
+    await s3Client.send(params);
     // const b64 = Buffer.from(file.buffer).toString("base64");
     // const dataURI = "data:" + file.mimetype + ";base64," + b64;
     // const cldRes = await handleUpload(dataURI);

@@ -6,6 +6,14 @@ const filterQuery = require("../utils/filterQuery");
 const Categories = require("../models/categoryModel");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
+const s3Client = new S3Client({
+  region: "ap-south-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
+  },
+});
+
 exports.getCategories = catchAsyncErrors(async (req, res, next) => {
   const { searchParams } = req.query;
 
@@ -48,7 +56,7 @@ exports.addCategory = catchAsyncErrors(async (req, res, next) => {
           ContentDisposition: "inline",
           ContentType: "image/jpeg",
         });
-        await S3Client.send(params);
+        await s3Client.send(params);
 
         // const b64 = Buffer.from(file.buffer).toString("base64");
         // let dataURI = "data:" + file.mimetype + ";base64," + b64;
@@ -93,7 +101,7 @@ exports.addCategory = catchAsyncErrors(async (req, res, next) => {
         ContentDisposition: "inline",
         ContentType: "image/jpeg",
       });
-      await S3Client.send(params);
+      await s3Client.send(params);
       // const b64 = Buffer.from(file.buffer).toString("base64");
       // const dataURI = "data:" + file.mimetype + ";base64," + b64;
       // const cldRes = await handleUpload(dataURI);

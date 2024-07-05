@@ -7,6 +7,14 @@ const Categories = require("../models/categoryModel");
 const Blogs = require("../models/blogModel");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
+const s3Client = new S3Client({
+  region: "ap-south-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_KEY,
+  },
+});
+
 exports.addBlog = catchAsyncErrors(async (req, res, next) => {
   const {
     title,
@@ -32,7 +40,7 @@ exports.addBlog = catchAsyncErrors(async (req, res, next) => {
       ContentDisposition: "inline",
       ContentType: "image/jpeg",
     });
-    await S3Client.send(params);
+    await s3Client.send(params);
     image1 = {
       id: key,
       link: `https://essentialsbyla.s3.ap-south-1.amazonaws.com/${key}`,

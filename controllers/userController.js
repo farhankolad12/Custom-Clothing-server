@@ -302,7 +302,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
     expiredAt: { $gt: Date.now() },
   });
 
-  console.log(isExistsToken)
+  console.log(isExistsToken);
 
   if (isExistsToken) {
     const data = jwt.verify(token, process.env.JWT_SECRET);
@@ -311,7 +311,7 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
     const user = await Users.findOne({ _id: userId });
 
-    console.log(user)
+    console.log(user);
     if (user) {
       const newPassEnc = await bcrypt.hash(password, 10);
 
