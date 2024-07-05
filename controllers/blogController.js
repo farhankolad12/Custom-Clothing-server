@@ -5,6 +5,7 @@ const filterQuery = require("../utils/filterQuery");
 
 const Categories = require("../models/categoryModel");
 const Blogs = require("../models/blogModel");
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 exports.addBlog = catchAsyncErrors(async (req, res, next) => {
   const {
@@ -23,10 +24,22 @@ exports.addBlog = catchAsyncErrors(async (req, res, next) => {
 
   const file = req.files[0];
   if (file) {
-    const b64 = Buffer.from(file.buffer).toString("base64");
-    const dataURI = "data:" + file.mimetype + ";base64," + b64;
-    const cldRes = await handleUpload(dataURI);
-    image1 = { id: cldRes.public_id, link: cldRes.url };
+    const key = `Images/${file.fieldname}_${Date.now()}.jpg`;
+    const params = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+      Body: file.buffer,
+      ContentDisposition: "inline",
+      ContentType: "image/jpeg",
+    });
+    await S3Client.send(params);
+    image1 = {
+      id: key,
+      link: `https://essentialsbyla.s3.ap-south-1.amazonaws.com/${key}`,
+    };
+    // const b64 = Buffer.from(file.buffer).toString("base64");
+    // const dataURI = "data:" + file.mimetype + ";base64," + b64;
+    // const cldRes = await handleUpload(dataURI);
   }
 
   if (_id) {
