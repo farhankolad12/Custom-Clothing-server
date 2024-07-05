@@ -15,6 +15,7 @@ const HomePageContent = require("../models/homePageContentModel");
 
 const handleUpload = require("../utils/uploadImage");
 const { abandonedEmail } = require("../utils/sendEmail");
+const { PutObjectCommand, S3Client } = require("@aws-sdk/client-s3");
 
 exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
   const { changeType, data } = req.body;
@@ -27,10 +28,23 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
 
   for (let i = 0; i < imgFiles.length; i++) {
     const file = imgFiles[i];
-    const b64 = Buffer.from(file.buffer).toString("base64");
-    const dataURI = "data:" + file.mimetype + ";base64," + b64;
-    const cldRes = await handleUpload(dataURI);
-    const icon = { id: cldRes.public_id, link: cldRes.url };
+    const key = `Images/${file.fieldname}_${Date.now()}.jpg`;
+
+    const params = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+      Body: file.buffer,
+      ContentDisposition: "inline",
+      ContentType: "image/jpeg",
+    });
+    await S3Client.send(params);
+    // const b64 = Buffer.from(file.buffer).toString("base64");
+    // const dataURI = "data:" + file.mimetype + ";base64," + b64;
+    // const cldRes = await handleUpload(dataURI);
+    const icon = {
+      id: key,
+      link: `https://essentialsbyla.s3.ap-south-1.amazonaws.com/${key}`,
+    };
     img1.push({ icon, sliderId: file.fieldname });
   }
 

@@ -1,3 +1,4 @@
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
 const ErrorHandler = require("../utils/errorhandler");
 
@@ -31,10 +32,23 @@ exports.addUpdateCoupon = catchAsyncErrors(async (req, res, next) => {
   let img = JSON.parse(image || "{}");
 
   if (file) {
-    const b64 = Buffer.from(file.buffer).toString("base64");
-    const dataURI = "data:" + file.mimetype + ";base64," + b64;
-    const cldRes = await handleUpload(dataURI);
-    img = { id: cldRes.public_id, link: cldRes.url };
+    const key = `Images/${file.fieldname}_${Date.now()}.jpg`;
+
+    const params = new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key,
+      Body: file.buffer,
+      ContentDisposition: "inline",
+      ContentType: "image/jpeg",
+    });
+    await S3Client.send(params);
+    // const b64 = Buffer.from(file.buffer).toString("base64");
+    // const dataURI = "data:" + file.mimetype + ";base64," + b64;
+    // const cldRes = await handleUpload(dataURI);
+    img = {
+      id: key,
+      link: `https://essentialsbyla.s3.ap-south-1.amazonaws.com/${key}`,
+    };
   }
 
   if (isExists) {
