@@ -1,17 +1,7 @@
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors");
-
 const handleUpload = require("../utils/uploadImage");
 
 const AboutPageContent = require("../models/aboutPageContentModel");
-
-const s3Client = new S3Client({
-  region: "ap-south-1",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    secretAccessKey: process.env.AWS_SECRET_KEY,
-  },
-});
 
 exports.updateAboutPage = catchAsyncErrors(async (req, res, next) => {
   const { changeType, data } = req.body;
@@ -24,29 +14,11 @@ exports.updateAboutPage = catchAsyncErrors(async (req, res, next) => {
 
   for (let i = 0; i < imgFiles.length; i++) {
     const file = imgFiles[i];
-
-    const key = `Images/${file.fieldname}_${Date.now()}.jpg`;
-
-    const params = new PutObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET,
-      Key: key,
-      Body: file.buffer,
-      ContentDisposition: "inline",
-      ContentType: "image/jpeg",
-    });
-    await s3Client.send(params);
-
-    img1.push({
-      icon: {
-        id: key,
-        link: `https://essentialsbyla.s3.ap-south-1.amazonaws.com/${key}`,
-      },
-      id: file.fieldname,
-    });
-    // const b64 = Buffer.from(file.buffer).toString("base64");
-    // const dataURI = "data:" + file.mimetype + ";base64," + b64;
-    // const cldRes = await handleUpload(dataURI);
-    // const icon = { id: cldRes.public_id, link: cldRes.url };
+    const b64 = Buffer.from(file.buffer).toString("base64");
+    const dataURI = "data:" + file.mimetype + ";base64," + b64;
+    const cldRes = await handleUpload(dataURI);
+    const icon = { id: cldRes.public_id, link: cldRes.url };
+    img1.push({ icon, id: file.fieldname });
   }
 
   if (!aboutPageContent.length) {

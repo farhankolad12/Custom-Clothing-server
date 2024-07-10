@@ -299,10 +299,8 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
   const isExistsToken = await ResetTokens.findOne({
     token,
-    expiredAt: { $gt: Date.now() },
+    expiredAt: { $lt: Date.now() },
   });
-
-  console.log(isExistsToken);
 
   if (isExistsToken) {
     const data = jwt.verify(token, process.env.JWT_SECRET);
@@ -311,7 +309,6 @@ exports.resetPassword = catchAsyncErrors(async (req, res, next) => {
 
     const user = await Users.findOne({ _id: userId });
 
-    console.log(user);
     if (user) {
       const newPassEnc = await bcrypt.hash(password, 10);
 

@@ -1,13 +1,8 @@
 const mongoose = require("mongoose");
-
-function dateNow() {
-  return Date.now() + 864000
-}
-
 const ResetTokensSchema = new mongoose.Schema({
   userId: { type: String },
   token: { type: String },
-  expiredAt: { type: Number, default: dateNow },
+  expiredAt: { type: Number, default: Date.now + 86400 },
 });
 
 module.exports = mongoose.model("ResetTokens", ResetTokensSchema);
