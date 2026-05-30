@@ -444,7 +444,7 @@ exports.getAllCarts = catchAsyncErrors(async (req, res, next) => {
       });
 
       userResData.push({
-        ...product._doc,
+        ...product?._doc,
         quantity: cartProduct.quantity,
         selectedVariantIds: cartProduct.selectedVariationIds,
         selectedCombination: cartProduct.selectedCombination,

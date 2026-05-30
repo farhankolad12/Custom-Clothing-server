@@ -206,13 +206,12 @@ exports.authorizePayment = catchAsyncErrors(async (req, res, next) => {
         ? cartItem.coupon.discount
         : (cartItem.coupon.discount / 100) * cartItem.subTotalPrice
       : 0,
-    sub_total:
-      cartItem.subTotalPrice -
+    sub_total: cartItem.subTotalPrice /* -
       (isCoupon
         ? cartItem.coupon.type === "fixed"
           ? cartItem.coupon.discount
           : (cartItem.coupon.discount / 100) * cartItem.subTotalPrice
-        : 0),
+        : 0) */,
     length: 1,
     breadth: 1,
     height: 1,
