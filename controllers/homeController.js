@@ -16,6 +16,8 @@ const HomePageContent = require("../models/homePageContentModel");
 const handleUpload = require("../utils/uploadImage");
 const { abandonedEmail } = require("../utils/sendEmail");
 
+//  Added
+
 exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
   const { changeType, data } = req.body;
 
@@ -52,7 +54,7 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
     case "headerText":
       await HomePageContent.updateOne(
         { _id: homePageContent[0]._id },
-        { $set: { headerText: data } }
+        { $set: { headerText: data } },
       );
       break;
 
@@ -72,7 +74,7 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
                 })
               : JSON.parse(data),
           },
-        }
+        },
       );
       break;
 
@@ -83,12 +85,12 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
           $set: {
             videoSection: {
               thumbnailImg: img1.filter(
-                (img) => img.sliderId === "thumbnail"
+                (img) => img.sliderId === "thumbnail",
               )[0].icon,
               video: img1.filter((img) => img.sliderId === "video")[0].icon,
             },
           },
-        }
+        },
       );
       break;
 
@@ -104,7 +106,7 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
                   ?.icon || homePageContent[0].firstBanner.img,
             },
           },
-        }
+        },
       );
       break;
 
@@ -120,7 +122,7 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
                   ?.icon || homePageContent[0].secondBanner.img,
             },
           },
-        }
+        },
       );
       break;
     case "thirdBanner":
@@ -135,7 +137,7 @@ exports.updateHomePage = catchAsyncErrors(async (req, res, next) => {
                   ?.icon || homePageContent[0].thirdBanner.img,
             },
           },
-        }
+        },
       );
       break;
 
@@ -193,7 +195,7 @@ exports.homePage = catchAsyncErrors(async (req, res, next) => {
 
     user = await Users.findOne(
       { _id: decodedData?.id, role: "customer" },
-      { password: 0 }
+      { password: 0 },
     );
   } catch {
     res.cookie("token", "", {
@@ -274,7 +276,7 @@ exports.deleteWishlist = catchAsyncErrors(async (req, res, next) => {
 
   await Wishlists.updateOne(
     { uid: currentUser._id },
-    { $pull: { products: { productId } } }
+    { $pull: { products: { productId } } },
   );
 
   return res.status(200).json({ success: true });
@@ -301,7 +303,7 @@ exports.updateWishlist = catchAsyncErrors(async (req, res, next) => {
         $pull: {
           products: { productId },
         },
-      }
+      },
     );
   } else if (
     inWishlist &&
@@ -317,7 +319,7 @@ exports.updateWishlist = catchAsyncErrors(async (req, res, next) => {
             productId,
           },
         },
-      }
+      },
     );
   } else {
     const newWishlist = new Wishlists({
@@ -366,11 +368,11 @@ exports.updateWishlist = catchAsyncErrors(async (req, res, next) => {
   const customData_0 = new CustomData()
     .setValue(
       (await Products.findOne({ _id: productId, inStock: true }))
-        .combinations[0].salePrice
+        .combinations[0].salePrice,
     )
     .setCurrency("INR")
     .setContentName(
-      (await Products.findOne({ _id: productId, inStock: true })).name
+      (await Products.findOne({ _id: productId, inStock: true })).name,
     );
 
   const serverEvent_0 = new ServerEvent()
@@ -383,7 +385,7 @@ exports.updateWishlist = catchAsyncErrors(async (req, res, next) => {
 
   const eventsData = [serverEvent_0];
   const eventRequest = new EventRequest(access_token, pixel_id).setEvents(
-    eventsData
+    eventsData,
   );
   eventRequest.execute().then(
     (response) => {
@@ -391,7 +393,7 @@ exports.updateWishlist = catchAsyncErrors(async (req, res, next) => {
     },
     (err) => {
       console.error("Error: ", err);
-    }
+    },
   );
   return res.status(200).json({ success: true });
 });
@@ -433,7 +435,7 @@ exports.getAllCarts = catchAsyncErrors(async (req, res, next) => {
         password: 0,
         role: 0,
         usedCoupons: 0,
-      }
+      },
     );
     for (let i = 0; i < userCart?.products.length; i++) {
       const cartProduct = userCart.products[i];
@@ -581,11 +583,11 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
     const customData_0 = new CustomData()
       .setValue(
         (await Products.findOne({ _id: productId, inStock: true }))
-          .combinations[0].salePrice
+          .combinations[0].salePrice,
       )
       .setCurrency("INR")
       .setContentName(
-        (await Products.findOne({ _id: productId, inStock: true })).name
+        (await Products.findOne({ _id: productId, inStock: true })).name,
       );
 
     const serverEvent_0 = new ServerEvent()
@@ -598,7 +600,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
 
     const eventsData = [serverEvent_0];
     const eventRequest = new EventRequest(access_token, pixel_id).setEvents(
-      eventsData
+      eventsData,
     );
     eventRequest.execute().then(
       (response) => {
@@ -606,7 +608,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
       },
       (err) => {
         console.error("Error: ", err);
-      }
+      },
     );
     return res.status(200).json({ success: true });
   }
@@ -617,7 +619,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
   const subTotalPrice = userCart?.products.some(
     (productC) =>
       productC.productId === productId &&
-      productC.selectedCombination.id === selectedCombination.id
+      productC.selectedCombination.id === selectedCombination.id,
   )
     ? (userCart?.subTotalPrice || 0) +
       selectedCombination.salePrice * quantity -
@@ -628,7 +630,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
     userCart?.products.some(
       (productC) =>
         productC.productId === productId &&
-        productC.selectedCombination.id === selectedCombination.id
+        productC.selectedCombination.id === selectedCombination.id,
     )
       ? (updatedProducts = userCart?.products.map((productC) => {
           isProductId = true;
@@ -638,20 +640,20 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
             : productC._doc;
         }))
       : userCart?.products.some(
-          (productC) =>
-            productC.productId === productId &&
-            productC.selectedCombination.id !== selectedCombination.id
-        )
-      ? (updatedProducts = [
-          ...userCart?.products,
-          {
-            productId,
-            quantity,
-            selectedVariantIds,
-            selectedCombination,
-          },
-        ])
-      : [];
+            (productC) =>
+              productC.productId === productId &&
+              productC.selectedCombination.id !== selectedCombination.id,
+          )
+        ? (updatedProducts = [
+            ...userCart?.products,
+            {
+              productId,
+              quantity,
+              selectedVariantIds,
+              selectedCombination,
+            },
+          ])
+        : [];
   })();
 
   if (!isProductId) {
@@ -674,7 +676,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
               : shippingConfig.shippingCharge
             : shippingConfig?.shippingCharge,
         },
-      }
+      },
     );
 
     const ServerEvent = bizSdk.ServerEvent;
@@ -711,11 +713,11 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
     const customData_0 = new CustomData()
       .setValue(
         (await Products.findOne({ _id: productId, inStock: true }))
-          .combinations[0].salePrice
+          .combinations[0].salePrice,
       )
       .setCurrency("INR")
       .setContentName(
-        (await Products.findOne({ _id: productId, inStock: true })).name
+        (await Products.findOne({ _id: productId, inStock: true })).name,
       );
 
     const serverEvent_0 = new ServerEvent()
@@ -728,7 +730,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
 
     const eventsData = [serverEvent_0];
     const eventRequest = new EventRequest(access_token, pixel_id).setEvents(
-      eventsData
+      eventsData,
     );
     eventRequest.execute().then(
       (response) => {
@@ -736,7 +738,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
       },
       (err) => {
         console.error("Error: ", err);
-      }
+      },
     );
     return res.status(200).json({ success: true });
   }
@@ -753,7 +755,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
             : shippingConfig.shippingCharge
           : shippingConfig?.shippingCharge,
       },
-    }
+    },
   );
 
   const ServerEvent = bizSdk.ServerEvent;
@@ -790,11 +792,11 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
   const customData_0 = new CustomData()
     .setValue(
       (await Products.findOne({ _id: productId, inStock: true }))
-        .combinations[0].salePrice
+        .combinations[0].salePrice,
     )
     .setCurrency("INR")
     .setContentName(
-      (await Products.findOne({ _id: productId, inStock: true })).name
+      (await Products.findOne({ _id: productId, inStock: true })).name,
     );
 
   const serverEvent_0 = new ServerEvent()
@@ -807,7 +809,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
 
   const eventsData = [serverEvent_0];
   const eventRequest = new EventRequest(access_token, pixel_id).setEvents(
-    eventsData
+    eventsData,
   );
   eventRequest.execute().then(
     (response) => {
@@ -815,7 +817,7 @@ exports.updateCart = catchAsyncErrors(async (req, res, next) => {
     },
     (err) => {
       console.error("Error: ", err);
-    }
+    },
   );
   return res.status(200).json({ success: true });
 });
@@ -832,7 +834,7 @@ exports.deleteCart = catchAsyncErrors(async (req, res, next) => {
   const subTotalPrice = cartItems?.products.some(
     (productC) =>
       productC.productId === productId &&
-      productC.selectedCombination.id === selectedCombination.id
+      productC.selectedCombination.id === selectedCombination.id,
   )
     ? (cartItems?.subTotalPrice || 0) -
       selectedCombination.salePrice * quantity /*  -
@@ -862,7 +864,7 @@ exports.deleteCart = catchAsyncErrors(async (req, res, next) => {
             : shippingConfig.shippingCharge
           : shippingConfig?.shippingCharge,
       },
-    }
+    },
   );
 
   return res.status(200).json({ success: true });
@@ -925,13 +927,13 @@ exports.updateShippingConfig = catchAsyncErrors(async (req, res, next) => {
             type === "free-delivery"
               ? { shippingCharge: 0 }
               : type === "free-condition"
-              ? {
-                  shippingCharge: +shippingConfig.shippingCharge,
-                  minimumAmount: +shippingConfig.minimumAmount,
-                }
-              : { shippingCharge: +shippingConfig.shippingCharge },
+                ? {
+                    shippingCharge: +shippingConfig.shippingCharge,
+                    minimumAmount: +shippingConfig.minimumAmount,
+                  }
+                : { shippingCharge: +shippingConfig.shippingCharge },
         },
-      }
+      },
     );
 
     for (let i = 0; i < allCarts.length; i++) {
@@ -948,7 +950,7 @@ exports.updateShippingConfig = catchAsyncErrors(async (req, res, next) => {
                   : +shippingConfig.shippingCharge
                 : +shippingConfig?.shippingCharge,
           },
-        }
+        },
       );
     }
 
@@ -960,11 +962,11 @@ exports.updateShippingConfig = catchAsyncErrors(async (req, res, next) => {
       type === "free-delivery"
         ? { shippingCharge: 0 }
         : type === "free-condition"
-        ? {
-            shippingCharge: +shippingConfig.shippingCharge,
-            minimumAmount: +shippingConfig.minimumAmount,
-          }
-        : { shippingCharge: +shippingConfig.shippingCharge },
+          ? {
+              shippingCharge: +shippingConfig.shippingCharge,
+              minimumAmount: +shippingConfig.minimumAmount,
+            }
+          : { shippingCharge: +shippingConfig.shippingCharge },
   });
 
   await newHomePage.save();
@@ -983,7 +985,7 @@ exports.updateShippingConfig = catchAsyncErrors(async (req, res, next) => {
                 : +shippingConfig.shippingCharge
               : +shippingConfig?.shippingCharge,
         },
-      }
+      },
     );
   }
 
